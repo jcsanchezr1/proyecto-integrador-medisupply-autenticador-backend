@@ -29,7 +29,7 @@ jobs:
           coverage html
       - name: Check coverage threshold
         run: |
-          coverage report --fail-under=90
+          coverage report --fail-under=98
 
   medisupply-authenticator-merge-develop:
     name: Merge to develop
