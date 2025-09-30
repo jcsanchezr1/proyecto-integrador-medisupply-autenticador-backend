@@ -114,4 +114,4 @@ Para desplegar en Google Cloud Run:
 1. Implementar autenticación 
 2. Agregar base de datos
 3. Implementar endpoints de creaciòn de usuarios
-4. Agregar validaciones en e proyecto
+4. Agregar validaciones en e proyecto 2.
