@@ -20,12 +20,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-flask
       - name: Run unit tests
-        run: python -m unittest discover -s tests
+        run: pytest tests/unit/ -v
+      - name: Run integration tests
+        run: pytest tests/integration/ -v
       - name: Code coverage
         run: |
-          coverage run -m unittest
-          coverage report -m
+          pytest --cov=app --cov-report=term-missing
 
   medisupply-authenticator-merge-develop:
     name: Merge to develop
