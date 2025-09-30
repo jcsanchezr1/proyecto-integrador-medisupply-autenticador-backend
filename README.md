@@ -7,9 +7,21 @@ Sistema de autenticación backend para el proyecto integrador MediSupply - Versi
 Estructura básica preparada para escalar:
 
 ```
-app/
-├── controllers/     # Controladores REST
-└── __init__.py     # Configuración de la aplicación
+├── app/
+│   ├── config/          # Configuración
+│   ├── controllers/     # Controladores REST
+│   │   └── health_controller.py  # Healthcheck funcional
+│   ├── services/        # Lógica de negocio (estructura)
+│   ├── repositories/    # Acceso a datos (estructura)
+│   ├── models/          # Modelos de datos (estructura)
+│   ├── exceptions/      # Excepciones (estructura)
+│   └── utils/           # Utilidades (estructura)
+├── tests/               # Tests (estructura)
+├── app.py              # Punto de entrada
+├── requirements.txt    # Mismas versiones del proyecto sample
+├── Dockerfile         # Containerización
+├── docker-compose.yml # Orquestación
+└── README.md          # Documentación
 ```
 
 ## Características
