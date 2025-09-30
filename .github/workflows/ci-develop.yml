@@ -26,16 +26,8 @@ jobs:
         run: |
           coverage run -m unittest
           coverage report -m
-
-  medisupply-authenticator-merge-develop:
-    name: Merge to develop
-    needs: medisupply-authenticator-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Automerge
+      - name: Check for FINALIZADO
         if: ${{ contains(github.event.head_commit.message, 'FINALIZADO') }}
-        uses: tukasz/direct-merge-action@master
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          source-branch: ${{ github.event.ref }}
-          target-branch: develop
+        run: |
+          echo "Tests passed! Ready for manual merge to develop."
+          echo "Please merge this branch to develop manually."
