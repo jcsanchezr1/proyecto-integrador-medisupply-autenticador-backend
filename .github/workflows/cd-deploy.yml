@@ -70,7 +70,7 @@ jobs:
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
-            --set-env-vars HOST="0.0.0.0",PORT="8080",DEBUG="false" \
+            --set-env-vars HOST="0.0.0.0",DEBUG="false" \
             --memory 2Gi \
             --cpu 2 \
             --min-instances 0 \
