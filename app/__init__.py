@@ -16,7 +16,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
     
     # Configurar CORS
-    CORS(app)
+    cors = CORS(app)
     
     # Configurar rutas
     configure_routes(app)
