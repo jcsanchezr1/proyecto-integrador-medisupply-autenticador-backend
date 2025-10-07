@@ -16,6 +16,10 @@ class Config:
     # Configuración de la aplicación
     APP_NAME = 'MediSupply Authenticator Backend'
     APP_VERSION = '1.0.0'
+    
+    # Configuración de base de datos PostgreSQL
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://medisupply_local_user:medisupply_local_password@medisupply-db:5432/medisupply_local_db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class DevelopmentConfig(Config):
