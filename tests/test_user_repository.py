@@ -56,6 +56,7 @@ class TestUserRepository(unittest.TestCase):
         db_user.specialty = 'Alto valor'
         db_user.applicant_name = 'John Doe'
         db_user.applicant_email = 'john@hospital.com'
+        db_user.enabled = False
         db_user.created_at = datetime.now()
         db_user.updated_at = datetime.now()
         
@@ -83,6 +84,7 @@ class TestUserRepository(unittest.TestCase):
             specialty='Alto valor',
             applicant_name='John Doe',
             applicant_email='john@hospital.com',
+            enabled=False,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )

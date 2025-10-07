@@ -2,7 +2,7 @@
 Repositorio de Usuario - Implementación con SQLAlchemy
 """
 from typing import List, Optional
-from sqlalchemy import create_engine, Column, String, DateTime, Text
+from sqlalchemy import create_engine, Column, String, DateTime, Text, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -32,6 +32,7 @@ class UserDB(Base):
     specialty = Column(String(20), nullable=True)
     applicant_name = Column(String(80), nullable=True)
     applicant_email = Column(String(100), nullable=True)
+    enabled = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -69,6 +70,7 @@ class UserRepository(BaseRepository):
             specialty=db_user.specialty,
             applicant_name=db_user.applicant_name,
             applicant_email=db_user.applicant_email,
+            enabled=db_user.enabled,
             created_at=db_user.created_at,
             updated_at=db_user.updated_at
         )
@@ -87,6 +89,7 @@ class UserRepository(BaseRepository):
             specialty=user.specialty,
             applicant_name=user.applicant_name,
             applicant_email=user.applicant_email,
+            enabled=user.enabled,
             created_at=user.created_at,
             updated_at=user.updated_at
         )

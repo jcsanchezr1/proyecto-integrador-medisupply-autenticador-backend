@@ -44,7 +44,7 @@ class TestUserService(unittest.TestCase):
     def test_create_success(self):
         """Prueba crear usuario exitosamente"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital')
+        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         
@@ -392,7 +392,7 @@ class TestUserService(unittest.TestCase):
     def test_create_user_with_validation_success(self):
         """Prueba crear usuario con validación completa exitosamente"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital')
+        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         self.mock_keycloak_client.get_available_roles.return_value = ['Cliente']
@@ -422,7 +422,7 @@ class TestUserService(unittest.TestCase):
     def test_create_user_with_validation_keycloak_error(self):
         """Prueba crear usuario con error en Keycloak"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital')
+        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         self.mock_keycloak_client.get_available_roles.return_value = ['Cliente']
@@ -448,6 +448,37 @@ class TestUserService(unittest.TestCase):
         self.assertIn("Error al crear usuario en Keycloak", str(context.exception))
         # Verificar que se intentó eliminar el usuario de la base de datos local
         self.mock_user_repository.delete.assert_called_once_with('123')
+    
+    def test_create_user_with_validation_sets_enabled_false(self):
+        """Prueba que el campo enabled se establece como False por defecto"""
+        # Configurar mocks
+        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        self.mock_user_repository.create.return_value = mock_user
+        self.mock_user_repository.get_by_email.return_value = None  # Email no existe
+        self.mock_keycloak_client.get_available_roles.return_value = ['Cliente']
+        self.mock_keycloak_client.create_user.return_value = 'keycloak-123'
+        self.mock_keycloak_client.assign_role_to_user.return_value = None
+        
+        # Ejecutar
+        result = self.service.create_user_with_validation(
+            institution_name='Test Hospital',
+            email='test@hospital.com',
+            tax_id='123456789',
+            address='Test Address',
+            phone='1234567890',
+            institution_type='Hospital',
+            specialty='Alto valor',
+            applicant_name='John Doe',
+            applicant_email='john@hospital.com',
+            password='password123',
+            confirm_password='password123'
+        )
+        
+        # Verificar que el campo enabled se establece como False
+        self.assertEqual(result.enabled, False)
+        # Verificar que se pasó enabled=False al repositorio
+        call_args = self.mock_user_repository.create.call_args
+        self.assertEqual(call_args[1]['enabled'], False)
     
     def test_create_user_with_validation_invalid_role(self):
         """Prueba crear usuario con rol inválido"""

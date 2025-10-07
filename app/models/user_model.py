@@ -28,6 +28,7 @@ class User(BaseModel):
         self.confirm_password = kwargs.get('confirm_password', '')
         self.role = kwargs.get('role', '')
         self.keycloak_id = kwargs.get('keycloak_id', '')
+        self.enabled = kwargs.get('enabled', False)
         self.created_at = kwargs.get('created_at', datetime.utcnow())
         self.updated_at = kwargs.get('updated_at', datetime.utcnow())
     
@@ -45,6 +46,7 @@ class User(BaseModel):
             'specialty': self.specialty,
             'applicant_name': self.applicant_name,
             'applicant_email': self.applicant_email,
+            'enabled': self.enabled,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

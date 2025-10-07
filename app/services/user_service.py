@@ -192,6 +192,8 @@ class UserService(BaseService):
         try:
             # Asignar rol Cliente por defecto
             kwargs['role'] = 'Cliente'
+            # Establecer enabled=False por defecto
+            kwargs['enabled'] = False
             
             # Crear modelo temporal para validar
             temp_user = User(**kwargs)
