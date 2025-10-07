@@ -20,6 +20,11 @@ class Config:
     # Configuración de base de datos PostgreSQL
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://medisupply_local_user:medisupply_local_password@medisupply-db:5432/medisupply_local_db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Configuración de Keycloak
+    KC_BASE_URL = os.getenv('KC_BASE_URL', 'http://localhost:8080')
+    KC_ADMIN_USER = os.getenv('KC_ADMIN_USER', 'admin')
+    KC_ADMIN_PASS = os.getenv('KC_ADMIN_PASS', 'admin')
 
 
 class DevelopmentConfig(Config):

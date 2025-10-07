@@ -26,6 +26,8 @@ class User(BaseModel):
         self.applicant_email = kwargs.get('applicant_email', '')
         self.password = kwargs.get('password', '')
         self.confirm_password = kwargs.get('confirm_password', '')
+        self.role = kwargs.get('role', '')
+        self.keycloak_id = kwargs.get('keycloak_id', '')
         self.created_at = kwargs.get('created_at', datetime.utcnow())
         self.updated_at = kwargs.get('updated_at', datetime.utcnow())
     
@@ -57,8 +59,10 @@ class User(BaseModel):
         elif len(self.institution_name.strip()) > 100:
             errors.append("El campo 'Nombre de la institución' no puede exceder 100 caracteres")
         
-        # Validar número de identificación tributaria (opcional, máximo 50 caracteres)
-        if self.tax_id and len(self.tax_id.strip()) > 50:
+        # Validar número de identificación tributaria (obligatorio, máximo 50 caracteres)
+        if not self.tax_id or not self.tax_id.strip():
+            errors.append("El campo 'Número de identificación tributaria' es obligatorio")
+        elif len(self.tax_id.strip()) > 50:
             errors.append("El campo 'Número de identificación tributaria' no puede exceder 50 caracteres")
         
         # Validar correo electrónico (obligatorio, máximo 100 caracteres)
@@ -69,38 +73,49 @@ class User(BaseModel):
         elif not self._is_valid_email(self.email.strip()):
             errors.append("El campo 'Correo electrónico' debe tener un formato válido")
         
-        # Validar dirección (opcional, máximo 200 caracteres)
-        if self.address and len(self.address.strip()) > 200:
+        # Validar dirección (obligatorio, máximo 200 caracteres)
+        if not self.address or not self.address.strip():
+            errors.append("El campo 'Dirección' es obligatorio")
+        elif len(self.address.strip()) > 200:
             errors.append("El campo 'Dirección' no puede exceder 200 caracteres")
         
-        # Validar teléfono (opcional, máximo 20 caracteres)
-        if self.phone and len(self.phone.strip()) > 20:
+        # Validar teléfono (obligatorio, máximo 20 caracteres)
+        if not self.phone or not self.phone.strip():
+            errors.append("El campo 'Teléfono de contacto' es obligatorio")
+        elif len(self.phone.strip()) > 20:
             errors.append("El campo 'Teléfono de contacto' no puede exceder 20 caracteres")
-        elif self.phone and not re.match(r'^\d+$', self.phone.strip()):
+        elif not re.match(r'^\d+$', self.phone.strip()):
             errors.append("El campo 'Teléfono de contacto' debe contener solo números")
         
-        # Validar tipo de institución (opcional, valores específicos)
-        if self.institution_type and self.institution_type not in ['Clínica', 'Hospital', 'Laboratorio']:
+        # Validar tipo de institución (obligatorio, valores específicos)
+        if not self.institution_type or not self.institution_type.strip():
+            errors.append("El campo 'Tipo de institución' es obligatorio")
+        elif self.institution_type not in ['Clínica', 'Hospital', 'Laboratorio']:
             errors.append("El campo 'Tipo de institución' debe ser: Clínica, Hospital o Laboratorio")
         
         # Validar logo (opcional, string simple)
         if self.logo_filename and len(self.logo_filename.strip()) > 255:
             errors.append("El campo 'Logo' no puede exceder 255 caracteres")
         
-        # Validar especialidad (opcional, valores específicos)
-        if self.specialty and self.specialty not in ['Cadena de frío', 'Alto valor', 'Seguridad']:
+        # Validar especialidad (obligatorio, valores específicos)
+        if not self.specialty or not self.specialty.strip():
+            errors.append("El campo 'Especialidad' es obligatorio")
+        elif self.specialty not in ['Cadena de frío', 'Alto valor', 'Seguridad']:
             errors.append("El campo 'Especialidad' debe ser: Cadena de frío, Alto valor o Seguridad")
         
-        # Validar nombre del solicitante (opcional, máximo 80 caracteres)
-        if self.applicant_name and len(self.applicant_name.strip()) > 80:
+        # Validar nombre del solicitante (obligatorio, máximo 80 caracteres)
+        if not self.applicant_name or not self.applicant_name.strip():
+            errors.append("El campo 'Nombre del solicitante' es obligatorio")
+        elif len(self.applicant_name.strip()) > 80:
             errors.append("El campo 'Nombre del solicitante' no puede exceder 80 caracteres")
         
-        # Validar email del solicitante (opcional, máximo 100 caracteres)
-        if self.applicant_email:
-            if len(self.applicant_email.strip()) > 100:
-                errors.append("El campo 'Email del solicitante' no puede exceder 100 caracteres")
-            elif not self._is_valid_email(self.applicant_email.strip()):
-                errors.append("El campo 'Email del solicitante' debe tener un formato válido")
+        # Validar email del solicitante (obligatorio, máximo 100 caracteres)
+        if not self.applicant_email or not self.applicant_email.strip():
+            errors.append("El campo 'Email del solicitante' es obligatorio")
+        elif len(self.applicant_email.strip()) > 100:
+            errors.append("El campo 'Email del solicitante' no puede exceder 100 caracteres")
+        elif not self._is_valid_email(self.applicant_email.strip()):
+            errors.append("El campo 'Email del solicitante' debe tener un formato válido")
         
         # Validar contraseña (obligatorio)
         if not self.password or not self.password.strip():
@@ -115,6 +130,13 @@ class User(BaseModel):
         # Validar que las contraseñas coincidan
         if self.password and self.confirm_password and self.password != self.confirm_password:
             errors.append("Los campos 'Contraseña' y 'Confirmar contraseña' deben ser iguales")
+        
+        # Validar rol (obligatorio, valores específicos)
+        valid_roles = ['Administrador', 'Compras', 'Ventas', 'Logistica', 'Cliente']
+        if not self.role or not self.role.strip():
+            errors.append("El campo 'Rol' es obligatorio")
+        elif self.role.strip() not in valid_roles:
+            errors.append(f"El campo 'Rol' debe ser uno de los siguientes: {', '.join(valid_roles)}")
         
         if errors:
             raise ValueError("; ".join(errors))

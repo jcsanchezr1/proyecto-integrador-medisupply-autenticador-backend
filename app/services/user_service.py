@@ -7,13 +7,15 @@ from .base_service import BaseService
 from ..repositories.user_repository import UserRepository
 from ..models.user_model import User
 from ..exceptions.custom_exceptions import ValidationError, BusinessLogicError
+from ..external.keycloak_client import KeycloakClient
 
 
 class UserService(BaseService):
     """Servicio para operaciones de negocio de usuarios"""
     
-    def __init__(self, user_repository=None):
+    def __init__(self, user_repository=None, keycloak_client=None):
         self.user_repository = user_repository or UserRepository()
+        self.keycloak_client = keycloak_client or KeycloakClient()
     
     def create(self, **kwargs) -> User:
         """Crea un nuevo usuario con validaciones de negocio"""
@@ -140,6 +142,15 @@ class UserService(BaseService):
             elif '@' not in applicant_email or '.' not in applicant_email.split('@')[-1]:
                 errors.append("El email del solicitante debe tener un formato válido")
         
+        # Validar rol
+        if 'role' in kwargs:
+            role = kwargs['role'].strip() if kwargs['role'] else ''
+            valid_roles = ['Administrador', 'Compras', 'Ventas', 'Logistica', 'Cliente']
+            if not role:
+                errors.append("El campo 'Rol' es obligatorio")
+            elif role not in valid_roles:
+                errors.append(f"El campo 'Rol' debe ser uno de los siguientes: {', '.join(valid_roles)}")
+        
         # Validar email único
         if 'email' in kwargs and kwargs['email']:
             existing_user = self.user_repository.get_by_email(kwargs['email'].strip())
@@ -177,15 +188,51 @@ class UserService(BaseService):
             raise BusinessLogicError(f"Error al contar usuarios: {str(e)}")
     
     def create_user_with_validation(self, **kwargs) -> User:
-        """Crea un usuario con validaciones completas"""
+        """Crea un usuario con validaciones completas y sincronización con Keycloak"""
         try:
+            # Asignar rol Cliente por defecto
+            kwargs['role'] = 'Cliente'
+            
             # Crear modelo temporal para validar
             temp_user = User(**kwargs)
             temp_user.validate()
             
-            # Crear usuario usando el servicio
-            return self.create(**kwargs)
+            # Validar rol específico para Keycloak
+            valid_roles = self.keycloak_client.get_available_roles()
+            if kwargs.get('role') not in valid_roles:
+                raise ValidationError(f"Rol '{kwargs.get('role')}' no válido. Roles disponibles: {', '.join(valid_roles)}")
             
+            # Crear usuario en la base de datos local
+            user = self.create(**kwargs)
+            
+            try:
+                # Crear usuario en Keycloak
+                keycloak_user_id = self.keycloak_client.create_user(
+                    email=kwargs['email'],
+                    password=kwargs['password'],
+                    institution_name=kwargs['institution_name']
+                )
+                
+                # Asignar rol en Keycloak
+                self.keycloak_client.assign_role_to_user(
+                    user_id=keycloak_user_id,
+                    role_name=kwargs['role']
+                )
+                
+            except Exception as keycloak_error:
+                # Si falla Keycloak, eliminar usuario de la base de datos local
+                try:
+                    self.user_repository.delete(user.id)
+                except:
+                    pass  # Si no se puede eliminar, al menos loguear el error
+                
+                raise BusinessLogicError(f"Error al crear usuario en Keycloak: {str(keycloak_error)}")
+            
+            return user
+            
+        except ValidationError as e:
+            # Re-lanzar ValidationError para que se maneje correctamente en el controlador
+            raise e
         except ValueError as e:
             raise ValidationError(str(e))
         except Exception as e:

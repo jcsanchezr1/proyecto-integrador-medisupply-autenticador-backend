@@ -110,22 +110,26 @@ class UserController(BaseController):
                 raise ValidationError("El cuerpo de la petición JSON está vacío")
             
             # Validar campos requeridos
-            required_fields = ['institution_name', 'email', 'password', 'confirm_password']
+            required_fields = [
+                'institution_name', 'tax_id', 'email', 'address', 'phone', 
+                'institution_type', 'specialty', 'applicant_name', 'applicant_email', 
+                'password', 'confirm_password'
+            ]
             for field in required_fields:
                 if field not in json_data or not json_data[field]:
                     raise ValidationError(f"El campo '{field}' es obligatorio")
             
             return {
                 'institution_name': json_data['institution_name'].strip(),
-                'tax_id': json_data.get('tax_id', '').strip(),
+                'tax_id': json_data['tax_id'].strip(),
                 'email': json_data['email'].strip(),
-                'address': json_data.get('address', '').strip(),
-                'phone': json_data.get('phone', '').strip(),
-                'institution_type': json_data.get('institution_type', '').strip(),
+                'address': json_data['address'].strip(),
+                'phone': json_data['phone'].strip(),
+                'institution_type': json_data['institution_type'].strip(),
                 'logo_filename': json_data.get('logo_filename', '').strip(),
-                'specialty': json_data.get('specialty', '').strip(),
-                'applicant_name': json_data.get('applicant_name', '').strip(),
-                'applicant_email': json_data.get('applicant_email', '').strip(),
+                'specialty': json_data['specialty'].strip(),
+                'applicant_name': json_data['applicant_name'].strip(),
+                'applicant_email': json_data['applicant_email'].strip(),
                 'password': json_data['password'].strip(),
                 'confirm_password': json_data['confirm_password'].strip()
             }
