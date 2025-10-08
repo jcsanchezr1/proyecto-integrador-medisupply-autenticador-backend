@@ -188,25 +188,6 @@ class UserController(BaseController):
             raise ValidationError(f"Error al procesar formulario: {str(e)}")
     
 
-
-class UserHealthController(BaseController):
-    """Controlador para health check de usuarios"""
-    
-    def get(self) -> Tuple[Dict[str, Any], int]:
-        """GET /auth/user/ping - Health check"""
-        try:
-            return self.success_response(
-                data={
-                    'service': 'users',
-                    'status': 'healthy',
-                    'version': '1.0.0'
-                },
-                message="Servicio de usuarios funcionando correctamente"
-            )
-        except Exception as e:
-            return self.handle_exception(e)
-
-
 class UserDeleteAllController(BaseController):
     """Controlador para eliminar todos los usuarios"""
     

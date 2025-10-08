@@ -10,7 +10,7 @@ from flask import Flask
 # Agregar el directorio padre al path para importar la app
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from app.controllers.user_controller import UserController, UserHealthController, UserDeleteAllController
+from app.controllers.user_controller import UserController, UserDeleteAllController, AdminUserController
 from app.exceptions.custom_exceptions import ValidationError, BusinessLogicError, NotFoundError
 
 
@@ -84,7 +84,7 @@ class TestUserController(unittest.TestCase):
         # Mock del método _process_json_request
         with patch.object(self.controller, '_process_json_request') as mock_process:
             user_data = {
-                'institution_name': 'Test Hospital',
+                'name': 'Test Hospital',
                 'tax_id': '123456789',
                 'email': 'test@hospital.com',
                 'address': 'Test Address',
@@ -115,7 +115,7 @@ class TestUserController(unittest.TestCase):
         # Mock del método _process_json_request
         with patch.object(self.controller, '_process_json_request') as mock_process:
             user_data = {
-                'institution_name': '',  # Campo vacío
+                'name': '',  # Campo vacío
                 'tax_id': '123456789',
                 'email': 'test@hospital.com',
                 'address': 'Test Address',
@@ -145,7 +145,7 @@ class TestUserController(unittest.TestCase):
         # Mock del método _process_json_request
         with patch.object(self.controller, '_process_json_request') as mock_process:
             user_data = {
-                'institution_name': 'Test Hospital',
+                'name': 'Test Hospital',
                 'tax_id': '123456789',
                 'email': 'test@hospital.com',
                 'address': 'Test Address',
@@ -180,33 +180,6 @@ class TestUserController(unittest.TestCase):
                 # Verificar
                 self.assertEqual(status_code, 400)
                 self.assertIn("JSON está vacío", response["error"])
-
-
-class TestUserHealthController(unittest.TestCase):
-    """Pruebas para UserHealthController"""
-    
-    def setUp(self):
-        """Configuración inicial para cada prueba"""
-        self.controller = UserHealthController()
-    
-    def test_get_health_check_success(self):
-        """Prueba health check exitoso"""
-        response, status_code = self.controller.get()
-        
-        self.assertEqual(status_code, 200)
-        self.assertEqual(response["message"], "Servicio de usuarios funcionando correctamente")
-        self.assertEqual(response["data"]["service"], "users")
-        self.assertEqual(response["data"]["status"], "healthy")
-        self.assertEqual(response["data"]["version"], "1.0.0")
-    
-    def test_get_health_check_exception(self):
-        """Prueba health check con excepción"""
-        # Simular excepción
-        with patch.object(self.controller, 'success_response', side_effect=Exception("Error")):
-            response, status_code = self.controller.get()
-            
-            self.assertEqual(status_code, 500)
-            self.assertIn("error", response)
 
 
 class TestUserDeleteAllController(unittest.TestCase):
@@ -264,6 +237,208 @@ class TestUserDeleteAllController(unittest.TestCase):
         # Verificar
         self.assertEqual(status_code, 500)
         self.assertIn("Error temporal del sistema", response["error"])
+
+
+class TestUserControllerExtended(unittest.TestCase):
+    """Pruebas adicionales para UserController para aumentar cobertura"""
+    
+    def setUp(self):
+        """Configuración inicial para cada prueba"""
+        self.app = Flask(__name__)
+        self.app.config['TESTING'] = True
+        self.mock_user_service = Mock()
+        self.controller = UserController(user_service=self.mock_user_service)
+    
+    def test_get_users_list_success(self):
+        """Prueba GET para obtener lista de usuarios exitosamente"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=10'):
+            # Configurar mocks
+            mock_users = [
+                {'id': '1', 'name': 'Hospital 1', 'email': 'h1@test.com'},
+                {'id': '2', 'name': 'Hospital 2', 'email': 'h2@test.com'}
+            ]
+            self.mock_user_service.get_users_summary.return_value = mock_users
+            self.mock_user_service.get_users_count.return_value = 2
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.assertIn('data', response)
+            self.assertIn('users', response['data'])
+            self.assertIn('pagination', response['data'])
+            self.assertEqual(len(response['data']['users']), 2)
+    
+    def test_get_users_list_invalid_page(self):
+        """Prueba GET con página inválida"""
+        with self.app.test_request_context('/auth/user?page=0&per_page=10'):
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 400)
+            self.assertIn("page", response["error"])
+    
+    def test_get_users_list_invalid_per_page(self):
+        """Prueba GET con per_page inválido"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=0'):
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 400)
+            self.assertIn("per_page", response["error"])
+    
+    def test_get_users_list_per_page_too_large(self):
+        """Prueba GET con per_page muy grande"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=101'):
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 400)
+            self.assertIn("per_page", response["error"])
+    
+    def test_get_users_list_default_params(self):
+        """Prueba GET con parámetros por defecto"""
+        with self.app.test_request_context('/auth/user'):
+            # Configurar mocks
+            self.mock_user_service.get_users_summary.return_value = []
+            self.mock_user_service.get_users_count.return_value = 0
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.mock_user_service.get_users_summary.assert_called_once_with(limit=10, offset=0)
+    
+    def test_process_json_request_success(self):
+        """Prueba _process_json_request exitoso"""
+        with self.app.test_request_context('/auth/user', method='POST', json={
+            'name': 'Test Hospital',
+            'tax_id': '12345678-9',
+            'email': 'test@hospital.com',
+            'address': '123 Main St',
+            'phone': '+1234567890',
+            'institution_type': 'Hospital',
+            'specialty': 'Cardiología',
+            'applicant_name': 'Dr. Smith',
+            'applicant_email': 'dr.smith@hospital.com',
+            'password': 'password123',
+            'confirm_password': 'password123',
+            'logo_filename': 'logo.jpg'
+        }):
+            result = self.controller._process_json_request()
+            
+            self.assertEqual(result['name'], 'Test Hospital')
+            self.assertEqual(result['email'], 'test@hospital.com')
+            self.assertEqual(result['logo_filename'], 'logo.jpg')
+    
+    def test_process_json_request_missing_field(self):
+        """Prueba _process_json_request con campo faltante"""
+        with self.app.test_request_context('/auth/user', method='POST', json={
+            'name': 'Test Hospital',
+            'email': 'test@hospital.com'
+            # Faltan otros campos requeridos
+        }):
+            with self.assertRaises(ValidationError) as context:
+                self.controller._process_json_request()
+            
+            self.assertIn("obligatorio", str(context.exception))
+    
+    def test_process_multipart_request_success(self):
+        """Prueba _process_multipart_request exitoso"""
+        with self.app.test_request_context('/auth/user', method='POST', data={
+            'name': 'Test Hospital',
+            'tax_id': '12345678-9',
+            'email': 'test@hospital.com',
+            'address': '123 Main St',
+            'phone': '+1234567890',
+            'institution_type': 'Hospital',
+            'specialty': 'Cardiología',
+            'applicant_name': 'Dr. Smith',
+            'applicant_email': 'dr.smith@hospital.com',
+            'password': 'password123',
+            'confirm_password': 'password123'
+        }):
+            result = self.controller._process_multipart_request()
+            
+            self.assertEqual(result['name'], 'Test Hospital')
+            self.assertEqual(result['email'], 'test@hospital.com')
+            self.assertIsNone(result['logo_file'])
+    
+    def test_process_multipart_request_missing_field(self):
+        """Prueba _process_multipart_request con campo faltante"""
+        with self.app.test_request_context('/auth/user', method='POST', data={
+            'name': 'Test Hospital',
+            'email': 'test@hospital.com'
+            # Faltan otros campos requeridos
+        }):
+            with self.assertRaises(ValidationError) as context:
+                self.controller._process_multipart_request()
+            
+            self.assertIn("obligatorio", str(context.exception))
+    
+    def test_post_multipart_request(self):
+        """Prueba POST con multipart/form-data"""
+        with self.app.test_request_context('/auth/user', method='POST', 
+                                         content_type='multipart/form-data',
+                                         data={
+                                             'name': 'Test Hospital',
+                                             'tax_id': '12345678-9',
+                                             'email': 'test@hospital.com',
+                                             'address': '123 Main St',
+                                             'phone': '+1234567890',
+                                             'institution_type': 'Hospital',
+                                             'specialty': 'Cardiología',
+                                             'applicant_name': 'Dr. Smith',
+                                             'applicant_email': 'dr.smith@hospital.com',
+                                             'password': 'password123',
+                                             'confirm_password': 'password123'
+                                         }):
+            # Configurar mock
+            mock_user = Mock()
+            mock_user.to_dict.return_value = {'id': '123', 'name': 'Test Hospital'}
+            self.mock_user_service.create_user_with_validation.return_value = mock_user
+            
+            response, status_code = self.controller.post()
+            
+            self.assertEqual(status_code, 201)
+            self.assertIn('data', response)
+    
+    def test_post_general_exception(self):
+        """Prueba POST con excepción general"""
+        with self.app.test_request_context('/auth/user', method='POST', json={
+            'name': 'Test Hospital',
+            'tax_id': '12345678-9',
+            'email': 'test@hospital.com',
+            'address': '123 Main St',
+            'phone': '+1234567890',
+            'institution_type': 'Hospital',
+            'specialty': 'Cardiología',
+            'applicant_name': 'Dr. Smith',
+            'applicant_email': 'dr.smith@hospital.com',
+            'password': 'password123',
+            'confirm_password': 'password123'
+        }):
+            # Configurar mock para lanzar excepción general
+            self.mock_user_service.create_user_with_validation.side_effect = Exception("Error inesperado")
+            
+            response, status_code = self.controller.post()
+            
+            self.assertEqual(status_code, 500)
+            self.assertIn("Error del sistema", response["error"])
+
+
+class TestAdminUserController(unittest.TestCase):
+    """Pruebas para AdminUserController"""
+    
+    def setUp(self):
+        """Configuración inicial para cada prueba"""
+        self.mock_user_service = Mock()
+        self.controller = AdminUserController(user_service=self.mock_user_service)
+    
+    def test_controller_initialization(self):
+        """Test de inicialización del controlador"""
+        self.assertIsNotNone(self.controller)
+        self.assertEqual(self.controller.user_service, self.mock_user_service)
+    
+    def test_controller_with_default_service(self):
+        """Test de inicialización con servicio por defecto"""
+        controller = AdminUserController()
+        self.assertIsNotNone(controller.user_service)
 
 
 if __name__ == '__main__':
