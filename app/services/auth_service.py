@@ -57,3 +57,31 @@ class AuthService:
         except ValueError as e:
             raise BusinessLogicError(f"Error en la respuesta de autenticación: {str(e)}")
     
+    def logout_user(self, refresh_token: str) -> Dict[str, Any]:
+        """
+        Cierra la sesión de un usuario invalidando el token en Keycloak
+        
+        Args:
+            refresh_token: Token de refresh para invalidar
+            
+        Returns:
+            Dict con la respuesta de Keycloak o error
+            
+        Raises:
+            ValidationError: Si los datos de entrada son inválidos
+            BusinessLogicError: Si hay error en la lógica de negocio
+        """
+        # Validar que el refresh_token no esté vacío
+        if not refresh_token or not refresh_token.strip():
+            raise ValidationError("El refresh_token es requerido")
+        
+        # Cerrar sesión con Keycloak
+        logout_result = self.keycloak_client.logout_user(refresh_token.strip())
+        
+        # Si hay error en la respuesta de Keycloak
+        if 'error' in logout_result:
+            raise BusinessLogicError(logout_result)
+        
+        # Retornar la respuesta de Keycloak
+        return logout_result
+    

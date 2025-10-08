@@ -112,6 +112,77 @@ class TestAuthService(unittest.TestCase):
         
         self.assertIn("El campo 'user' debe ser un email válido", str(context.exception))
     
+    def test_logout_user_success(self):
+        """Test de logout exitoso"""
+        # Datos de prueba
+        refresh_token = "valid_refresh_token"
+        
+        # Mock de respuesta exitosa de Keycloak
+        keycloak_response = {"message": "Logout successful"}
+        self.mock_keycloak_client.logout_user.return_value = keycloak_response
+        
+        # Ejecutar el método
+        result = self.auth_service.logout_user(refresh_token)
+        
+        # Verificaciones
+        self.assertEqual(result, keycloak_response)
+        self.mock_keycloak_client.logout_user.assert_called_once_with(refresh_token)
+    
+    def test_logout_user_empty_token(self):
+        """Test de logout con token vacío"""
+        with self.assertRaises(ValidationError) as context:
+            self.auth_service.logout_user("")
+        
+        self.assertIn("El refresh_token es requerido", str(context.exception))
+        self.mock_keycloak_client.logout_user.assert_not_called()
+    
+    def test_logout_user_none_token(self):
+        """Test de logout con token None"""
+        with self.assertRaises(ValidationError) as context:
+            self.auth_service.logout_user(None)
+        
+        self.assertIn("El refresh_token es requerido", str(context.exception))
+        self.mock_keycloak_client.logout_user.assert_not_called()
+    
+    def test_logout_user_whitespace_token(self):
+        """Test de logout con token solo espacios en blanco"""
+        with self.assertRaises(ValidationError) as context:
+            self.auth_service.logout_user("   ")
+        
+        self.assertIn("El refresh_token es requerido", str(context.exception))
+        self.mock_keycloak_client.logout_user.assert_not_called()
+    
+    def test_logout_user_keycloak_error(self):
+        """Test de logout con error de Keycloak"""
+        refresh_token = "invalid_refresh_token"
+        
+        # Mock de error de Keycloak
+        keycloak_error = {
+            "error": "invalid_grant",
+            "error_description": "Invalid refresh token"
+        }
+        self.mock_keycloak_client.logout_user.return_value = keycloak_error
+        
+        # Ejecutar el método y verificar excepción
+        with self.assertRaises(BusinessLogicError) as context:
+            self.auth_service.logout_user(refresh_token)
+        
+        self.assertEqual(context.exception.args[0], keycloak_error)
+        self.mock_keycloak_client.logout_user.assert_called_once_with(refresh_token)
+    
+    def test_logout_user_keycloak_connection_error(self):
+        """Test de logout con error de conexión a Keycloak"""
+        refresh_token = "valid_refresh_token"
+        
+        # Mock de error de conexión
+        self.mock_keycloak_client.logout_user.side_effect = BusinessLogicError("Error de conexión con Keycloak")
+        
+        # Ejecutar el método y verificar excepción
+        with self.assertRaises(BusinessLogicError) as context:
+            self.auth_service.logout_user(refresh_token)
+        
+        self.assertEqual(str(context.exception), "Error de conexión con Keycloak")
+        self.mock_keycloak_client.logout_user.assert_called_once_with(refresh_token)
 
 
 if __name__ == '__main__':

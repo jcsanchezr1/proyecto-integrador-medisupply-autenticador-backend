@@ -28,7 +28,7 @@ def configure_routes(app):
     """Configura las rutas de la aplicación"""
     from .controllers.health_controller import HealthCheckView
     from .controllers.user_controller import UserController, UserDeleteAllController, AdminUserController
-    from .controllers.auth_controller import AuthController
+    from .controllers.auth_controller import AuthController, LogoutController
     
     api = Api(app)
     
@@ -37,6 +37,7 @@ def configure_routes(app):
     
     # Authentication endpoints
     api.add_resource(AuthController, '/auth/token')
+    api.add_resource(LogoutController, '/auth/logout')
     
     # User endpoints
     api.add_resource(UserController, '/auth/user', '/auth/user/<string:user_id>')

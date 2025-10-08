@@ -43,3 +43,41 @@ class AuthController(BaseController):
             return self.error_response(str(e), 401)
         except Exception as e:
             return self.handle_exception(e)
+
+
+class LogoutController(BaseController):
+    """Controlador para operaciones de logout"""
+    
+    def __init__(self, auth_service=None):
+        self.auth_service = auth_service or AuthService()
+    
+    def post(self) -> Tuple[Dict[str, Any], int]:
+        """POST /auth/logout - Cerrar sesión de usuario"""
+        try:
+            # Obtener datos del request
+            json_data = request.get_json()
+            if not json_data:
+                return self.error_response("El cuerpo de la petición JSON está vacío", 400)
+            
+            # Extraer refresh_token del request
+            refresh_token = json_data.get('refresh_token', '').strip()
+            
+            # Cerrar sesión usando el servicio
+            logout_result = self.auth_service.logout_user(refresh_token)
+            
+            # Si la respuesta es exitosa (logout successful), retornar 204
+            if isinstance(logout_result, dict) and logout_result.get('message') == 'Logout successful':
+                return logout_result, 204
+            
+            # Si hay error en la respuesta de Keycloak, retornar el error
+            return logout_result, 400
+            
+        except ValidationError as e:
+            return self.error_response(str(e), 400)
+        except BusinessLogicError as e:
+            # Si el error es un dict (respuesta de Keycloak), retornarlo directamente
+            if isinstance(e.args[0], dict):
+                return self.error_response(e.args[0], 400)
+            return self.error_response(str(e), 400)
+        except Exception as e:
+            return self.handle_exception(e)

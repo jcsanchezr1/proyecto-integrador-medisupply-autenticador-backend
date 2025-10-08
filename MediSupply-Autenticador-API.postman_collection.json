@@ -1223,11 +1223,17 @@
 							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
 							"});",
 							"",
-							"// Guardar token para uso posterior",
+							"// Guardar tokens para uso posterior",
 							"const responseJson = pm.response.json();",
 							"if (responseJson && responseJson.access_token) {",
 							"    pm.globals.set('auth_token', responseJson.access_token);",
 							"    console.log('Token de autenticación guardado');",
+							"}",
+							"",
+							"// Guardar refresh_token para logout",
+							"if (responseJson && responseJson.refresh_token) {",
+							"    pm.globals.set('refresh_token', responseJson.refresh_token);",
+							"    console.log('Refresh token guardado para logout');",
 							"}"
 						],
 						"type": "text/javascript"
@@ -1830,6 +1836,240 @@
 						"users"
 					]
 				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cerrar sesión - Exitoso",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Verificar que existe un refresh_token previo",
+							"const refreshToken = pm.globals.get('refresh_token');",
+							"if (!refreshToken) {",
+							"    console.error('ERROR: No hay un refresh_token disponible.');",
+							"    console.error('Debe ejecutar primero el endpoint \"Auth Token - Exitoso\"');",
+							"    throw new Error('No hay refresh_token. Ejecute primero \"Auth Token - Exitoso\"');",
+							"} else {",
+							"    console.log('Refresh token encontrado, procediendo con logout...');",
+							"    console.log('Refresh token a usar:', refreshToken);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta exitosa de logout",
+							"pm.test(\"Status code is 204\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 5000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/logout",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"logout"
+					]
+				},
+				"description": "Cerrar sesión de usuario invalidando el token"
+			},
+			"response": []
+		},
+		{
+			"name": "Cerrar sesión - Token inválido",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generar un refresh_token inválido para la prueba",
+							"const invalidRefreshToken = 'invalid_refresh_token_' + Date.now();",
+							"pm.environment.set('invalid_refresh_token', invalidRefreshToken);",
+							"console.log('Refresh token inválido generado para logout:', invalidRefreshToken);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de token inválido",
+							"pm.test(\"Status code is 400 or 401\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has error message\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"    // El error puede ser un objeto o string",
+							"    if (typeof jsonData.error === 'object') {",
+							"        pm.expect(jsonData.error).to.have.property('error');",
+							"        pm.expect(jsonData.error).to.have.property('error_description');",
+							"    } else {",
+							"        pm.expect(jsonData.error).to.be.a('string');",
+							"        pm.expect(jsonData.error.length).to.be.above(0);",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Error message contains token expiration info\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    let errorMessage = '';",
+							"    ",
+							"    // Manejar tanto objeto como string",
+							"    if (typeof jsonData.error === 'object') {",
+							"        errorMessage = (jsonData.error.error_description || jsonData.error.error || '').toLowerCase();",
+							"    } else {",
+							"        errorMessage = jsonData.error.toLowerCase();",
+							"    }",
+							"    ",
+							"    pm.expect(errorMessage).to.satisfy(function(msg) {",
+							"        return msg.includes('expirado') || msg.includes('expired') || msg.includes('invalid') || msg.includes('token') || msg.includes('grant');",
+							"    });",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 5000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"refresh_token\": \"{{invalid_refresh_token}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/logout",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"logout"
+					]
+				},
+				"description": "Intenta cerrar sesión con un token inválido"
+			},
+			"response": []
+		},
+		{
+			"name": "Cerrar sesión - Token faltante - Bad Request",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error por token faltante",
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has error message\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"    // El error puede ser un objeto o string",
+							"    if (typeof jsonData.error === 'object') {",
+							"        pm.expect(jsonData.error).to.have.property('error');",
+							"        pm.expect(jsonData.error).to.have.property('error_description');",
+							"    } else {",
+							"        pm.expect(jsonData.error).to.be.a('string');",
+							"        pm.expect(jsonData.error.length).to.be.above(0);",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Error message contains required field info\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    let errorMessage = '';",
+							"    ",
+							"    // Manejar tanto objeto como string",
+							"    if (typeof jsonData.error === 'object') {",
+							"        errorMessage = (jsonData.error.error_description || jsonData.error.error || '').toLowerCase();",
+							"    } else {",
+							"        errorMessage = jsonData.error.toLowerCase();",
+							"    }",
+							"    ",
+							"    pm.expect(errorMessage).to.satisfy(function(msg) {",
+							"        return msg.includes('requerido') || msg.includes('required') || msg.includes('obligatorio') || msg.includes('refresh_token');",
+							"    });",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 3000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"refresh_token\": \"\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/logout",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"logout"
+					]
+				},
+				"description": "Intenta cerrar sesión sin proporcionar refresh_token"
 			},
 			"response": []
 		},
