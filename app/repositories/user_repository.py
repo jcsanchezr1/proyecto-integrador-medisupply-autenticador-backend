@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, String, DateTime, Text, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 from .base_repository import BaseRepository
@@ -196,7 +196,7 @@ class UserRepository(BaseRepository):
                 if hasattr(db_user, key):
                     setattr(db_user, key, value)
             
-            db_user.updated_at = datetime.utcnow()
+            db_user.updated_at = datetime.now(timezone.utc)
             session.commit()
             session.refresh(db_user)
             

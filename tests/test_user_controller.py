@@ -437,8 +437,10 @@ class TestAdminUserController(unittest.TestCase):
     
     def test_controller_with_default_service(self):
         """Test de inicialización con servicio por defecto"""
-        controller = AdminUserController()
-        self.assertIsNotNone(controller.user_service)
+        # Mock del UserService para evitar dependencias de base de datos
+        with patch('app.controllers.user_controller.UserService') as mock_service:
+            controller = AdminUserController()
+            self.assertIsNotNone(controller.user_service)
 
 
 if __name__ == '__main__':

@@ -179,7 +179,7 @@ class CloudStorageService:
             str: URL firmada de la imagen
         """
         try:
-            from datetime import datetime, timedelta
+            from datetime import datetime, timedelta, timezone
             
             full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
             blob = self.bucket.blob(full_path)
@@ -190,7 +190,7 @@ class CloudStorageService:
                 return ""
             
             # Generar URL firmada con expiración
-            expiration = datetime.utcnow() + timedelta(hours=expiration_hours)
+            expiration = datetime.now(timezone.utc) + timedelta(hours=expiration_hours)
             signed_url = blob.generate_signed_url(
                 expiration=expiration,
                 method='GET'

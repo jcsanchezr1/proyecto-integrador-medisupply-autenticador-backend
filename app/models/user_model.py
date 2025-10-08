@@ -3,7 +3,7 @@ Modelo de Usuario - Entidad para gestionar usuarios de instituciones
 """
 import re
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from .base_model import BaseModel
 
@@ -30,8 +30,8 @@ class User(BaseModel):
         self.role = kwargs.get('role', '')
         self.keycloak_id = kwargs.get('keycloak_id', '')
         self.enabled = kwargs.get('enabled', False)
-        self.created_at = kwargs.get('created_at', datetime.utcnow())
-        self.updated_at = kwargs.get('updated_at', datetime.utcnow())
+        self.created_at = kwargs.get('created_at', datetime.now(timezone.utc))
+        self.updated_at = kwargs.get('updated_at', datetime.now(timezone.utc))
     
     def to_dict(self) -> Dict[str, Any]:
         """Convierte el modelo a diccionario"""
