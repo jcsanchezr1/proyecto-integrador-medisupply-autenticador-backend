@@ -102,9 +102,6 @@ class UserController(BaseController):
         except BusinessLogicError as e:
             return self.error_response(f"Error de negocio: {str(e)}", 500)
         except Exception as e:
-            import traceback
-            error_trace = traceback.format_exc()
-            print(f"Error en crear usuario: {error_trace}")  # Log para debugging
             return self.error_response(f"Error del sistema: {str(e)}", 500)
     
     def _process_json_request(self) -> Dict[str, Any]:
