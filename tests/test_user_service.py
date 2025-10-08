@@ -21,9 +21,13 @@ class TestUserService(unittest.TestCase):
         """Configuración inicial para cada prueba"""
         self.mock_user_repository = Mock()
         self.mock_keycloak_client = Mock()
+        self.mock_cloud_storage_service = Mock()
+        self.mock_config = Mock()
         self.service = UserService(
             user_repository=self.mock_user_repository,
-            keycloak_client=self.mock_keycloak_client
+            keycloak_client=self.mock_keycloak_client,
+            cloud_storage_service=self.mock_cloud_storage_service,
+            config=self.mock_config
         )
     
     def test_init_with_dependencies(self):
@@ -34,12 +38,16 @@ class TestUserService(unittest.TestCase):
     def test_init_without_dependencies(self):
         """Prueba inicialización sin dependencias"""
         with patch('app.services.user_service.UserRepository') as mock_repo, \
-             patch('app.services.user_service.KeycloakClient') as mock_keycloak:
+             patch('app.services.user_service.KeycloakClient') as mock_keycloak, \
+             patch('app.services.user_service.CloudStorageService') as mock_cloud, \
+             patch('app.services.user_service.Config') as mock_config:
             
             service = UserService()
             
             self.assertIsNotNone(service.user_repository)
             self.assertIsNotNone(service.keycloak_client)
+            self.assertIsNotNone(service.cloud_storage_service)
+            self.assertIsNotNone(service.config)
     
     def test_create_success(self):
         """Prueba crear usuario exitosamente"""
@@ -485,6 +493,167 @@ class TestUserService(unittest.TestCase):
         # Esta prueba se omite porque la validación de rol se maneja en Keycloak
         # y no en la validación local del servicio
         pass
+    
+    def test_create_with_logo_file_success(self):
+        """Prueba crear usuario con archivo de logo exitosamente"""
+        # Configurar mocks
+        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        self.mock_user_repository.create.return_value = mock_user
+        self.mock_user_repository.get_by_email.return_value = None  # Email no existe
+        self.mock_cloud_storage_service.upload_image.return_value = (True, "Success", "https://storage.googleapis.com/bucket/logo.jpg")
+        
+        # Crear mock de archivo
+        mock_file = Mock()
+        mock_file.filename = "logo.jpg"
+        
+        # Ejecutar
+        result = self.service.create(
+            institution_name='Test Hospital',
+            email='test@hospital.com',
+            tax_id='123456789',
+            address='Test Address',
+            phone='1234567890',
+            institution_type='Hospital',
+            specialty='Alto valor',
+            applicant_name='John Doe',
+            applicant_email='john@hospital.com',
+            password='password123',
+            confirm_password='password123',
+            logo_file=mock_file
+        )
+        
+        # Verificar
+        self.assertIsInstance(result, User)
+        self.mock_cloud_storage_service.upload_image.assert_called_once()
+        self.mock_user_repository.create.assert_called_once()
+    
+    def test_create_with_logo_file_upload_error(self):
+        """Prueba crear usuario con error al subir logo"""
+        # Configurar mocks
+        self.mock_user_repository.get_by_email.return_value = None  # Email no existe
+        self.mock_cloud_storage_service.upload_image.return_value = (False, "Upload failed", None)
+        
+        # Crear mock de archivo
+        mock_file = Mock()
+        mock_file.filename = "logo.jpg"
+        
+        # Ejecutar y verificar
+        with self.assertRaises(BusinessLogicError) as context:
+            self.service.create(
+                institution_name='Test Hospital',
+                email='test@hospital.com',
+                tax_id='123456789',
+                address='Test Address',
+                phone='1234567890',
+                institution_type='Hospital',
+                specialty='Alto valor',
+                applicant_name='John Doe',
+                applicant_email='john@hospital.com',
+                password='password123',
+                confirm_password='password123',
+                logo_file=mock_file
+            )
+        
+        self.assertIn("Error al subir imagen", str(context.exception))
+    
+    def test_create_without_logo_file(self):
+        """Prueba crear usuario sin archivo de logo"""
+        # Configurar mocks
+        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        self.mock_user_repository.create.return_value = mock_user
+        self.mock_user_repository.get_by_email.return_value = None  # Email no existe
+        
+        # Ejecutar
+        result = self.service.create(
+            institution_name='Test Hospital',
+            email='test@hospital.com',
+            tax_id='123456789',
+            address='Test Address',
+            phone='1234567890',
+            institution_type='Hospital',
+            specialty='Alto valor',
+            applicant_name='John Doe',
+            applicant_email='john@hospital.com',
+            password='password123',
+            confirm_password='password123'
+        )
+        
+        # Verificar
+        self.assertIsInstance(result, User)
+        self.mock_cloud_storage_service.upload_image.assert_not_called()
+        self.mock_user_repository.create.assert_called_once()
+    
+    def test_process_logo_file_success(self):
+        """Prueba procesar archivo de logo exitosamente"""
+        # Configurar mocks
+        self.mock_cloud_storage_service.upload_image.return_value = (True, "Success", "https://storage.googleapis.com/bucket/logo.jpg")
+        
+        # Crear mock de archivo
+        mock_file = Mock()
+        mock_file.filename = "logo.jpg"
+        
+        # Ejecutar
+        filename, url = self.service._process_logo_file(mock_file)
+        
+        # Verificar
+        self.assertIsNotNone(filename)
+        self.assertIsNotNone(url)
+        self.assertEqual(url, "https://storage.googleapis.com/bucket/logo.jpg")
+        self.mock_cloud_storage_service.upload_image.assert_called_once()
+    
+    def test_process_logo_file_no_file(self):
+        """Prueba procesar archivo de logo cuando no hay archivo"""
+        # Ejecutar
+        filename, url = self.service._process_logo_file(None)
+        
+        # Verificar
+        self.assertIsNone(filename)
+        self.assertIsNone(url)
+        self.mock_cloud_storage_service.upload_image.assert_not_called()
+    
+    def test_process_logo_file_empty_filename(self):
+        """Prueba procesar archivo de logo con filename vacío"""
+        # Crear mock de archivo sin filename
+        mock_file = Mock()
+        mock_file.filename = ""
+        
+        # Ejecutar
+        filename, url = self.service._process_logo_file(mock_file)
+        
+        # Verificar
+        self.assertIsNone(filename)
+        self.assertIsNone(url)
+        self.mock_cloud_storage_service.upload_image.assert_not_called()
+    
+    def test_process_logo_file_upload_error(self):
+        """Prueba procesar archivo de logo con error de subida"""
+        # Configurar mocks
+        self.mock_cloud_storage_service.upload_image.return_value = (False, "Upload failed", None)
+        
+        # Crear mock de archivo
+        mock_file = Mock()
+        mock_file.filename = "logo.jpg"
+        
+        # Ejecutar y verificar
+        with self.assertRaises(ValidationError) as context:
+            self.service._process_logo_file(mock_file)
+        
+        self.assertIn("Error al subir imagen", str(context.exception))
+    
+    def test_process_logo_file_exception(self):
+        """Prueba procesar archivo de logo con excepción general"""
+        # Configurar mocks
+        self.mock_cloud_storage_service.upload_image.side_effect = Exception("General error")
+        
+        # Crear mock de archivo
+        mock_file = Mock()
+        mock_file.filename = "logo.jpg"
+        
+        # Ejecutar y verificar
+        with self.assertRaises(ValidationError) as context:
+            self.service._process_logo_file(mock_file)
+        
+        self.assertIn("Error al procesar archivo de logo", str(context.exception))
 
 
 if __name__ == '__main__':

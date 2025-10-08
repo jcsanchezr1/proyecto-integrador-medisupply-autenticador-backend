@@ -5,6 +5,7 @@ import unittest
 import sys
 import os
 from unittest.mock import Mock, patch, MagicMock
+from flask import Flask
 
 # Agregar el directorio padre al path para importar la app
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -18,6 +19,8 @@ class TestUserController(unittest.TestCase):
     
     def setUp(self):
         """Configuración inicial para cada prueba"""
+        self.app = Flask(__name__)
+        self.app.config['TESTING'] = True
         self.mock_user_service = Mock()
         self.controller = UserController(user_service=self.mock_user_service)
     
@@ -95,12 +98,14 @@ class TestUserController(unittest.TestCase):
             }
             mock_process.return_value = user_data
             
-            response, status_code = self.controller.post()
-            
-            # Verificar
-            self.assertEqual(status_code, 201)
-            self.assertEqual(response["message"], "Usuario registrado exitosamente")
-            self.assertEqual(response["data"], {"id": "123", "name": "Test Hospital"})
+            # Usar contexto de Flask para la prueba
+            with self.app.test_request_context():
+                response, status_code = self.controller.post()
+                
+                # Verificar
+                self.assertEqual(status_code, 201)
+                self.assertEqual(response["message"], "Usuario registrado exitosamente")
+                self.assertEqual(response["data"], {"id": "123", "name": "Test Hospital"})
     
     def test_post_validation_error(self):
         """Prueba crear usuario con error de validación"""
@@ -124,11 +129,13 @@ class TestUserController(unittest.TestCase):
             }
             mock_process.return_value = user_data
             
-            response, status_code = self.controller.post()
-            
-            # Verificar
-            self.assertEqual(status_code, 400)
-            self.assertEqual(response["error"], "Campo obligatorio")
+            # Usar contexto de Flask para la prueba
+            with self.app.test_request_context():
+                response, status_code = self.controller.post()
+                
+                # Verificar
+                self.assertEqual(status_code, 400)
+                self.assertEqual(response["error"], "Campo obligatorio")
     
     def test_post_business_logic_error(self):
         """Prueba crear usuario con error de lógica de negocio"""
@@ -152,11 +159,13 @@ class TestUserController(unittest.TestCase):
             }
             mock_process.return_value = user_data
             
-            response, status_code = self.controller.post()
-            
-            # Verificar
-            self.assertEqual(status_code, 500)
-            self.assertIn("Error de negocio", response["error"])
+            # Usar contexto de Flask para la prueba
+            with self.app.test_request_context():
+                response, status_code = self.controller.post()
+                
+                # Verificar
+                self.assertEqual(status_code, 500)
+                self.assertIn("Error de negocio", response["error"])
     
     def test_post_empty_json(self):
         """Prueba crear usuario con JSON vacío"""
@@ -164,11 +173,13 @@ class TestUserController(unittest.TestCase):
         with patch.object(self.controller, '_process_json_request') as mock_process:
             mock_process.side_effect = ValidationError("El cuerpo de la petición JSON está vacío")
             
-            response, status_code = self.controller.post()
-            
-            # Verificar
-            self.assertEqual(status_code, 400)
-            self.assertIn("JSON está vacío", response["error"])
+            # Usar contexto de Flask para la prueba
+            with self.app.test_request_context():
+                response, status_code = self.controller.post()
+                
+                # Verificar
+                self.assertEqual(status_code, 400)
+                self.assertIn("JSON está vacío", response["error"])
 
 
 class TestUserHealthController(unittest.TestCase):
