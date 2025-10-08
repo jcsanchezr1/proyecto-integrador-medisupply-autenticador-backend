@@ -187,3 +187,41 @@ class KeycloakClient:
     def get_available_roles(self) -> list:
         """Retorna la lista de roles disponibles en Keycloak"""
         return ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+    
+    def authenticate_user(self, username: str, password: str) -> Dict[str, Any]:
+        """Autentica un usuario con Keycloak y retorna el token"""
+        try:
+            url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
+            
+            data = {
+                'grant_type': 'password',
+                'client_id': 'medisupply-app',
+                'username': username,
+                'password': password
+            }
+            
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            
+            response = requests.post(url, data=data, headers=headers, timeout=30)
+            
+            # Si la respuesta es exitosa, retornar el JSON
+            if response.status_code == 200:
+                return response.json()
+            
+            # Si hay error, retornar el error de Keycloak
+            try:
+                error_data = response.json()
+                return error_data
+            except:
+                # Si no se puede parsear el JSON, crear un error genérico
+                return {
+                    "error": "authentication_failed",
+                    "error_description": "Error de autenticación"
+                }
+                
+        except requests.exceptions.RequestException as e:
+            raise BusinessLogicError(f"Error al autenticar con Keycloak: {str(e)}")
+        except Exception as e:
+            raise BusinessLogicError(f"Error inesperado al autenticar con Keycloak: {str(e)}")
