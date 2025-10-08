@@ -27,7 +27,7 @@ def create_app():
 def configure_routes(app):
     """Configura las rutas de la aplicación"""
     from .controllers.health_controller import HealthCheckView
-    from .controllers.user_controller import UserController, UserHealthController, UserDeleteAllController
+    from .controllers.user_controller import UserController, UserHealthController, UserDeleteAllController, AdminUserController
     from .controllers.auth_controller import AuthController
     
     api = Api(app)
@@ -42,3 +42,6 @@ def configure_routes(app):
     api.add_resource(UserController, '/auth/user', '/auth/user/<string:user_id>')
     api.add_resource(UserHealthController, '/auth/user/ping')
     api.add_resource(UserDeleteAllController, '/auth/user/all')
+    
+    # Admin endpoints
+    api.add_resource(AdminUserController, '/auth/admin/users')

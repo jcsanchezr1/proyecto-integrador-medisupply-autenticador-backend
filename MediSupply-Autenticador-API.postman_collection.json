@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "68931b1b-2f62-4c88-8608-89f4123aef3e",
+		"_postman_id": "474f8056-db45-499b-adb6-23a3c10daf9d",
 		"name": "MediSupply Autenticador API",
 		"description": "Colección de endpoints para el servicio de autenticación MediSupply con automatización de pruebas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-68931b1b-2f62-4c88-8608-89f4123aef3e?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-474f8056-db45-499b-adb6-23a3c10daf9d?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -177,7 +177,7 @@
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('data');",
 							"    pm.expect(jsonData.data).to.have.property('id');",
-							"    pm.expect(jsonData.data).to.have.property('institution_name');",
+							"    pm.expect(jsonData.data).to.have.property('name');",
 							"    pm.expect(jsonData.data).to.have.property('email');",
 							"});",
 							"",
@@ -185,7 +185,7 @@
 							"    if (pm.response.code === 201) {",
 							"        const jsonData = pm.response.json();",
 							"        const user = jsonData.data;",
-							"        pm.expect(user.institution_name).to.equal(pm.environment.get('nombre_institucion'));",
+							"        pm.expect(user.name).to.equal(pm.environment.get('nombre_institucion'));",
 							"        pm.expect(user.email).to.equal(pm.environment.get('email_institucion'));",
 							"        pm.expect(user.institution_type).to.equal(pm.environment.get('tipo_institucion'));",
 							"        pm.expect(user).to.have.property('tax_id');",
@@ -256,7 +256,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"{{nombre_institucion}}\",\n  \"tax_id\": \"{{tax_id}}\",\n  \"email\": \"{{email_institucion}}\",\n  \"address\": \"{{direccion}}\",\n  \"phone\": \"{{telefono}}\",\n  \"institution_type\": \"{{tipo_institucion}}\",\n  \"logo_filename\": \"{{logo_filename}}\",\n  \"specialty\": \"{{especialidad}}\",\n  \"applicant_name\": \"{{nombre_solicitante}}\",\n  \"applicant_email\": \"{{email_solicitante}}\",\n  \"password\": \"{{password_usuario}}\",\n  \"confirm_password\": \"{{password_usuario}}\"\n}"
+					"raw": "{\n  \"name\": \"{{nombre_institucion}}\",\n  \"tax_id\": \"{{tax_id}}\",\n  \"email\": \"{{email_institucion}}\",\n  \"address\": \"{{direccion}}\",\n  \"phone\": \"{{telefono}}\",\n  \"institution_type\": \"{{tipo_institucion}}\",\n  \"logo_filename\": \"{{logo_filename}}\",\n  \"specialty\": \"{{especialidad}}\",\n  \"applicant_name\": \"{{nombre_solicitante}}\",\n  \"applicant_email\": \"{{email_solicitante}}\",\n  \"password\": \"{{password_usuario}}\",\n  \"confirm_password\": \"{{password_usuario}}\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -326,7 +326,7 @@
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('data');",
 							"    pm.expect(jsonData.data).to.have.property('id');",
-							"    pm.expect(jsonData.data).to.have.property('institution_name');",
+							"    pm.expect(jsonData.data).to.have.property('name');",
 							"    pm.expect(jsonData.data).to.have.property('email');",
 							"});",
 							"",
@@ -375,7 +375,7 @@
 					"mode": "formdata",
 					"formdata": [
 						{
-							"key": "institution_name",
+							"key": "name",
 							"value": "{{nombre_institucion_imagen}}",
 							"type": "text"
 						},
@@ -570,7 +570,7 @@
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('data');",
 							"    pm.expect(jsonData.data).to.have.property('id');",
-							"    pm.expect(jsonData.data).to.have.property('institution_name');",
+							"    pm.expect(jsonData.data).to.have.property('name');",
 							"    pm.expect(jsonData.data).to.have.property('email');",
 							"});",
 							"",
@@ -746,7 +746,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"Hospital Test Duplicado\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{created_user_email}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Alto valor\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Hospital Test Duplicado\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{created_user_email}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Alto valor\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -807,7 +807,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"{{nombre_invalido}}\",\n  \"tax_id\": \"{{tax_id_invalido}}\",\n  \"email\": \"{{email_invalido}}\",\n  \"address\": \"{{direccion_invalida}}\",\n  \"phone\": \"{{telefono_invalido}}\",\n  \"institution_type\": \"{{tipo_invalido}}\",\n  \"specialty\": \"{{especialidad_invalida}}\",\n  \"applicant_name\": \"{{nombre_solicitante_invalido}}\",\n  \"applicant_email\": \"{{email_solicitante_invalido}}\",\n  \"password\": \"{{password_invalido}}\",\n  \"confirm_password\": \"{{password_confirm_invalido}}\"\n}"
+					"raw": "{\n  \"name\": \"{{nombre_invalido}}\",\n  \"tax_id\": \"{{tax_id_invalido}}\",\n  \"email\": \"{{email_invalido}}\",\n  \"address\": \"{{direccion_invalida}}\",\n  \"phone\": \"{{telefono_invalido}}\",\n  \"institution_type\": \"{{tipo_invalido}}\",\n  \"specialty\": \"{{especialidad_invalida}}\",\n  \"applicant_name\": \"{{nombre_solicitante_invalido}}\",\n  \"applicant_email\": \"{{email_solicitante_invalido}}\",\n  \"password\": \"{{password_invalido}}\",\n  \"confirm_password\": \"{{password_confirm_invalido}}\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -857,7 +857,7 @@
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('data');",
 							"    pm.expect(jsonData.data).to.have.property('id');",
-							"    pm.expect(jsonData.data).to.have.property('institution_name');",
+							"    pm.expect(jsonData.data).to.have.property('name');",
 							"    pm.expect(jsonData.data).to.have.property('email');",
 							"    pm.expect(jsonData.data).to.have.property('institution_type');",
 							"});",
@@ -893,7 +893,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"Laboratorio Central\",\n  \"tax_id\": \"55555555-5\",\n  \"email\": \"{{email_tipos_institucion}}\",\n  \"address\": \"Calle 321 #65-43, Barranquilla\",\n  \"phone\": \"3007777777\",\n  \"institution_type\": \"Laboratorio\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Ana Martínez\",\n  \"applicant_email\": \"ana.martinez@laboratoriocentral.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Laboratorio Central\",\n  \"tax_id\": \"55555555-5\",\n  \"email\": \"{{email_tipos_institucion}}\",\n  \"address\": \"Calle 321 #65-43, Barranquilla\",\n  \"phone\": \"3007777777\",\n  \"institution_type\": \"Laboratorio\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Ana Martínez\",\n  \"applicant_email\": \"ana.martinez@laboratoriocentral.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -972,7 +972,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"Hospital Test Tipo Inválido\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{email_tipo_invalido}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Tipo Inválido\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Hospital Test Tipo Inválido\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{email_tipo_invalido}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Tipo Inválido\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -1022,7 +1022,7 @@
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('data');",
 							"    pm.expect(jsonData.data).to.have.property('id');",
-							"    pm.expect(jsonData.data).to.have.property('institution_name');",
+							"    pm.expect(jsonData.data).to.have.property('name');",
 							"    pm.expect(jsonData.data).to.have.property('email');",
 							"    pm.expect(jsonData.data).to.have.property('specialty');",
 							"});",
@@ -1051,7 +1051,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"Clínica Especializada\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidades}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Seguridad\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Clínica Especializada\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidades}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Seguridad\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -1130,7 +1130,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"Clínica Test Especialidad Inválida\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidad_invalida}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Especialidad Inválida\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Clínica Test Especialidad Inválida\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidad_invalida}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Especialidad Inválida\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -1209,7 +1209,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"Hospital con nombre muy largo que excede los 100 caracteres permitidos y debería generar un error de validación\",\n  \"tax_id\": \"11111111-1\",\n  \"email\": \"{{email_limites_caracteres}}\",\n  \"address\": \"Calle 789 #12-34, Cali\",\n  \"phone\": \"3005555555\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Carlos López\",\n  \"applicant_email\": \"carlos.lopez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Hospital con nombre muy largo que excede los 100 caracteres permitidos y debería generar un error de validación\",\n  \"tax_id\": \"11111111-1\",\n  \"email\": \"{{email_limites_caracteres}}\",\n  \"address\": \"Calle 789 #12-34, Cali\",\n  \"phone\": \"3005555555\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Carlos López\",\n  \"applicant_email\": \"carlos.lopez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -1477,6 +1477,404 @@
 					]
 				},
 				"description": "Intenta autenticar con un email inválido"
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Usuario como Admin - Exitoso",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generar datos aleatorios para el usuario admin",
+							"const timestamp = Date.now();",
+							"const randomNum = Math.floor(Math.random() * 10000);",
+							"const emailAdmin = 'admin_user_' + timestamp + '_' + randomNum + '@test.com';",
+							"const nombreAdmin = 'Usuario Admin ' + timestamp;",
+							"",
+							"// Guardar en variables de entorno",
+							"pm.environment.set('admin_user_email', emailAdmin);",
+							"pm.environment.set('admin_user_name', nombreAdmin);",
+							"pm.environment.set('admin_user_password', 'password123');",
+							"pm.environment.set('admin_user_role', 'Administrador');",
+							"",
+							"console.log('Datos generados para usuario admin:');",
+							"console.log('Email:', emailAdmin);",
+							"console.log('Nombre:', nombreAdmin);",
+							"console.log('Rol:', 'Administrador');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta exitosa",
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has data field', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"// Validar campos del usuario creado",
+							"pm.test('User has required fields', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('name');",
+							"    pm.expect(jsonData.data).to.have.property('email');",
+							"    pm.expect(jsonData.data).to.have.property('role');",
+							"    pm.expect(jsonData.data).to.have.property('enabled');",
+							"    pm.expect(jsonData.data).to.have.property('created_at');",
+							"});",
+							"",
+							"// Validar que el rol sea correcto",
+							"pm.test('User role is Administrador', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.role).to.equal('Administrador');",
+							"});",
+							"",
+							"// Validar que el usuario esté habilitado",
+							"pm.test('User is enabled', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.enabled).to.be.true;",
+							"});",
+							"",
+							"// Guardar ID del usuario creado",
+							"if (pm.response.code === 201) {",
+							"    const jsonData = pm.response.json();",
+							"    pm.globals.set('admin_created_user_id', jsonData.data.id);",
+							"    pm.globals.set('admin_created_user_email', jsonData.data.email);",
+							"    console.log('Usuario admin creado con ID:', jsonData.data.id);",
+							"    console.log('Email del usuario admin:', jsonData.data.email);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"{{admin_user_name}}\",\n  \"email\": \"{{admin_user_email}}\",\n  \"password\": \"{{admin_user_password}}\",\n  \"confirm_password\": \"{{admin_user_password}}\",\n  \"role\": \"{{admin_user_role}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/admin/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"admin",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Usuario como Admin - Email duplicado - Bad request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Usar el email del usuario admin ya creado para probar duplicado",
+							"const existingEmail = pm.globals.get('admin_created_user_email');",
+							"if (!existingEmail) {",
+							"    console.log('No hay usuario admin creado, usando email de prueba');",
+							"    pm.environment.set('duplicate_admin_email', 'admin_duplicate@test.com');",
+							"} else {",
+							"    console.log('Usando email existente para probar duplicado:', existingEmail);",
+							"    pm.environment.set('duplicate_admin_email', existingEmail);",
+							"}",
+							"",
+							"pm.environment.set('duplicate_admin_name', 'Usuario Duplicado');",
+							"pm.environment.set('duplicate_admin_password', 'password123');",
+							"pm.environment.set('duplicate_admin_role', 'Compras');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Response has error message', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"    pm.expect(jsonData.error).to.be.a('string');",
+							"    pm.expect(jsonData.error.length).to.be.above(0);",
+							"});",
+							"",
+							"pm.test('Response time is less than 3000ms', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"{{duplicate_admin_name}}\",\n  \"email\": \"{{duplicate_admin_email}}\",\n  \"password\": \"{{duplicate_admin_password}}\",\n  \"confirm_password\": \"{{duplicate_admin_password}}\",\n  \"role\": \"{{duplicate_admin_role}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/admin/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"admin",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Usuario como Admin - Campos Faltantes - Bad Request",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Response has error message', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"    pm.expect(jsonData.error).to.be.a('string');",
+							"    pm.expect(jsonData.error.length).to.be.above(0);",
+							"});",
+							"",
+							"pm.test('Response time is less than 3000ms', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"confirm_password\": \"\",\n  \"role\": \"\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/admin/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"admin",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Usuario como Admin - Email invalido - Bad Request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generar datos con email inválido",
+							"const timestamp = Date.now();",
+							"const randomNum = Math.floor(Math.random() * 10000);",
+							"const emailInvalido = 'email_invalido_' + timestamp + '_' + randomNum;",
+							"const nombreInvalido = 'Usuario Email Inválido ' + timestamp;",
+							"",
+							"// Guardar en variables de entorno",
+							"pm.environment.set('invalid_email_admin', emailInvalido);",
+							"pm.environment.set('invalid_email_name', nombreInvalido);",
+							"pm.environment.set('invalid_email_password', 'password123');",
+							"pm.environment.set('invalid_email_role', 'Ventas');",
+							"",
+							"console.log('Datos generados para usuario con email inválido:');",
+							"console.log('Email:', emailInvalido);",
+							"console.log('Nombre:', nombreInvalido);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Response has error message about email', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});",
+							"",
+							"pm.test('Response time is less than 3000ms', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"{{invalid_email_name}}\",\n  \"email\": \"{{invalid_email_admin}}\",\n  \"password\": \"{{invalid_email_password}}\",\n  \"confirm_password\": \"{{invalid_email_password}}\",\n  \"role\": \"{{invalid_email_role}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/admin/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"admin",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Usuario como Admin - Rol invalido - Bad Request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generar datos para usuario con rol inválido",
+							"const timestamp = Date.now();",
+							"const randomNum = Math.floor(Math.random() * 10000);",
+							"const emailRolInvalido = 'invalid_role_' + timestamp + '_' + randomNum + '@test.com';",
+							"const nombreRolInvalido = 'Usuario Rol Inválido ' + timestamp;",
+							"",
+							"// Guardar en variables de entorno",
+							"pm.environment.set('invalid_role_email', emailRolInvalido);",
+							"pm.environment.set('invalid_role_name', nombreRolInvalido);",
+							"pm.environment.set('invalid_role_password', 'password123');",
+							"pm.environment.set('invalid_role_role', 'RolInvalido');",
+							"",
+							"console.log('Datos generados para usuario con rol inválido:');",
+							"console.log('Email:', emailRolInvalido);",
+							"console.log('Nombre:', nombreRolInvalido);",
+							"console.log('Rol:', 'RolInvalido');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Response has error message about invalid role', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"    pm.expect(jsonData.error).to.include('role');",
+							"});",
+							"",
+							"pm.test('Response time is less than 3000ms', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"{{invalid_role_name}}\",\n  \"email\": \"{{invalid_role_email}}\",\n  \"password\": \"{{invalid_role_password}}\",\n  \"confirm_password\": \"{{invalid_role_password}}\",\n  \"role\": \"{{invalid_role_role}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/admin/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"admin",
+						"users"
+					]
+				}
 			},
 			"response": []
 		},
