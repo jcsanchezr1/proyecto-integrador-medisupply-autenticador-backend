@@ -287,6 +287,123 @@ class TestKeycloakClient(unittest.TestCase):
         expected_roles = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
         for role in expected_roles:
             self.assertIn(role, valid_roles)
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_logout_user_success(self, mock_post):
+        """Prueba logout exitoso"""
+        # Configurar mock de respuesta exitosa
+        mock_response = Mock()
+        mock_response.status_code = 204
+        mock_response.json.return_value = {}
+        mock_post.return_value = mock_response
+        
+        # Ejecutar logout
+        result = self.client.logout_user("valid_refresh_token")
+        
+        # Verificaciones
+        self.assertEqual(result, {"message": "Logout successful"})
+        mock_post.assert_called_once()
+        
+        # Verificar URL y datos enviados
+        call_args = mock_post.call_args
+        self.assertIn("/protocol/openid-connect/logout", call_args[0][0])  # URL es el primer argumento posicional
+        self.assertEqual(call_args[1]['data']['client_id'], 'medisupply-app')
+        self.assertEqual(call_args[1]['data']['refresh_token'], 'valid_refresh_token')
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_logout_user_success_200(self, mock_post):
+        """Prueba logout exitoso con status 200"""
+        # Configurar mock de respuesta exitosa con status 200
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {}
+        mock_post.return_value = mock_response
+        
+        # Ejecutar logout
+        result = self.client.logout_user("valid_refresh_token")
+        
+        # Verificaciones
+        self.assertEqual(result, {"message": "Logout successful"})
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_logout_user_keycloak_error(self, mock_post):
+        """Prueba logout con error de Keycloak"""
+        # Configurar mock de error de Keycloak
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.json.return_value = {
+            "error": "invalid_grant",
+            "error_description": "Invalid refresh token"
+        }
+        mock_post.return_value = mock_response
+        
+        # Ejecutar logout
+        result = self.client.logout_user("invalid_refresh_token")
+        
+        # Verificaciones
+        self.assertEqual(result["error"], "invalid_grant")
+        self.assertEqual(result["error_description"], "Invalid refresh token")
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_logout_user_keycloak_error_no_standard_format(self, mock_post):
+        """Prueba logout con error de Keycloak sin formato estándar"""
+        # Configurar mock de error de Keycloak sin formato estándar
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.json.return_value = {
+            "message": "Token not found"
+        }
+        mock_post.return_value = mock_response
+        
+        # Ejecutar logout
+        result = self.client.logout_user("invalid_refresh_token")
+        
+        # Verificaciones - Keycloak retorna el JSON directamente cuando hay error
+        self.assertEqual(result["message"], "Token not found")
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_logout_user_json_parse_error(self, mock_post):
+        """Prueba logout con error de parsing JSON"""
+        # Configurar mock de respuesta con JSON inválido
+        mock_response = Mock()
+        mock_response.status_code = 500
+        mock_response.json.side_effect = ValueError("Invalid JSON")
+        mock_response.text = "Internal Server Error"
+        mock_post.return_value = mock_response
+        
+        # Ejecutar logout
+        result = self.client.logout_user("valid_refresh_token")
+        
+        # Verificaciones
+        self.assertEqual(result["error"], "logout_failed")
+        self.assertIn("Status: 500", result["error_description"])
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_logout_user_request_exception(self, mock_post):
+        """Prueba logout con excepción de requests"""
+        # Configurar mock para lanzar excepción
+        mock_post.side_effect = Exception("Connection error")
+        
+        # Ejecutar logout y verificar excepción
+        with self.assertRaises(BusinessLogicError) as context:
+            self.client.logout_user("valid_refresh_token")
+        
+        self.assertIn("Error inesperado al cerrar sesión con Keycloak", str(context.exception))
+        self.assertIn("Connection error", str(context.exception))
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_logout_user_timeout(self, mock_post):
+        """Prueba logout con timeout"""
+        # Configurar mock para lanzar excepción de timeout
+        import requests
+        mock_post.side_effect = requests.exceptions.Timeout("Request timeout")
+        
+        # Ejecutar logout y verificar excepción
+        with self.assertRaises(BusinessLogicError) as context:
+            self.client.logout_user("valid_refresh_token")
+        
+        self.assertIn("Error al cerrar sesión con Keycloak", str(context.exception))
+        self.assertIn("Request timeout", str(context.exception))
 
 
 if __name__ == '__main__':

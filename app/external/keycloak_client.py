@@ -225,3 +225,39 @@ class KeycloakClient:
             raise BusinessLogicError(f"Error al autenticar con Keycloak: {str(e)}")
         except Exception as e:
             raise BusinessLogicError(f"Error inesperado al autenticar con Keycloak: {str(e)}")
+    
+    def logout_user(self, refresh_token: str) -> Dict[str, Any]:
+        """Cierra la sesión de un usuario invalidando el token en Keycloak"""
+        try:
+            url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/logout"
+            
+            data = {
+                'client_id': 'medisupply-app',
+                'refresh_token': refresh_token
+            }
+            
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            
+            response = requests.post(url, data=data, headers=headers, timeout=30)
+            
+            # Si la respuesta es exitosa (200 o 204), retornar éxito
+            if response.status_code in [200, 204]:
+                return {"message": "Logout successful"}
+            
+            # Si hay error, retornar el error de Keycloak
+            try:
+                error_data = response.json()
+                return error_data
+            except:
+                # Si no se puede parsear el JSON, crear un error genérico
+                return {
+                    "error": "logout_failed",
+                    "error_description": f"Error al cerrar sesión. Status: {response.status_code}"
+                }
+                
+        except requests.exceptions.RequestException as e:
+            raise BusinessLogicError(f"Error al cerrar sesión con Keycloak: {str(e)}")
+        except Exception as e:
+            raise BusinessLogicError(f"Error inesperado al cerrar sesión con Keycloak: {str(e)}")
