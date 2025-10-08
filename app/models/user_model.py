@@ -3,7 +3,7 @@ Modelo de Usuario - Entidad para gestionar usuarios de instituciones
 """
 import re
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from .base_model import BaseModel
 
@@ -14,7 +14,7 @@ class User(BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.id = kwargs.get('id', str(uuid.uuid4()))
-        self.institution_name = kwargs.get('institution_name', '')
+        self.name = kwargs.get('name', '')
         self.tax_id = kwargs.get('tax_id', '')
         self.email = kwargs.get('email', '')
         self.address = kwargs.get('address', '')
@@ -30,14 +30,14 @@ class User(BaseModel):
         self.role = kwargs.get('role', '')
         self.keycloak_id = kwargs.get('keycloak_id', '')
         self.enabled = kwargs.get('enabled', False)
-        self.created_at = kwargs.get('created_at', datetime.utcnow())
-        self.updated_at = kwargs.get('updated_at', datetime.utcnow())
+        self.created_at = kwargs.get('created_at', datetime.now(timezone.utc))
+        self.updated_at = kwargs.get('updated_at', datetime.now(timezone.utc))
     
     def to_dict(self) -> Dict[str, Any]:
         """Convierte el modelo a diccionario"""
         return {
             'id': self.id,
-            'institution_name': self.institution_name,
+            'name': self.name,
             'tax_id': self.tax_id,
             'email': self.email,
             'address': self.address,
@@ -57,11 +57,11 @@ class User(BaseModel):
         """Valida los datos del modelo según las reglas de negocio"""
         errors = []
         
-        # Validar nombre de institución (obligatorio, máximo 100 caracteres)
-        if not self.institution_name or not self.institution_name.strip():
-            errors.append("El campo 'Nombre de la institución' es obligatorio")
-        elif len(self.institution_name.strip()) > 100:
-            errors.append("El campo 'Nombre de la institución' no puede exceder 100 caracteres")
+        # Validar nombre (obligatorio, máximo 100 caracteres)
+        if not self.name or not self.name.strip():
+            errors.append("El campo 'Nombre' es obligatorio")
+        elif len(self.name.strip()) > 100:
+            errors.append("El campo 'Nombre' no puede exceder 100 caracteres")
         
         # Validar número de identificación tributaria (obligatorio, máximo 50 caracteres)
         if not self.tax_id or not self.tax_id.strip():
@@ -192,4 +192,74 @@ class User(BaseModel):
         return f"logo_{unique_id}.{extension}"
     
     def __repr__(self) -> str:
-        return f"<User(id='{self.id}', institution_name='{self.institution_name}', email='{self.email}')>"
+        return f"<User(id='{self.id}', name='{self.name}', email='{self.email}')>"
+
+
+class AdminUserCreate(BaseModel):
+    """Modelo para creación de usuario por administrador"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name = kwargs.get('name', '')
+        self.email = kwargs.get('email', '')
+        self.password = kwargs.get('password', '')
+        self.confirm_password = kwargs.get('confirm_password', '')
+        self.role = kwargs.get('role', '')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convierte el modelo a diccionario (sin incluir password por seguridad)"""
+        return {
+            'name': self.name,
+            'email': self.email,
+            'role': self.role
+        }
+    
+    def validate(self) -> None:
+        """Valida los datos del modelo según las reglas de negocio"""
+        errors = []
+        
+        # Validar campo name (obligatorio, máximo 100 caracteres)
+        if not self.name or not self.name.strip():
+            errors.append("El campo 'name' es obligatorio")
+        elif len(self.name.strip()) > 100:
+            errors.append("El campo 'name' no puede exceder 100 caracteres")
+        
+        # Validar campo email (obligatorio, máximo 100 caracteres)
+        if not self.email or not self.email.strip():
+            errors.append("El campo 'email' es obligatorio")
+        elif len(self.email.strip()) > 100:
+            errors.append("El campo 'email' no puede exceder 100 caracteres")
+        elif not self._is_valid_email(self.email.strip()):
+            errors.append("El campo 'email' debe ser un email válido")
+        
+        # Validar campo password (obligatorio, mínimo 8 caracteres)
+        if not self.password or not self.password.strip():
+            errors.append("El campo 'password' es obligatorio")
+        elif len(self.password.strip()) < 8:
+            errors.append("El campo 'password' debe tener al menos 8 caracteres")
+        
+        # Validar campo confirm_password (obligatorio)
+        if not self.confirm_password or not self.confirm_password.strip():
+            errors.append("El campo 'confirm_password' es obligatorio")
+        
+        # Validar que las contraseñas coincidan
+        if self.password and self.confirm_password and self.password != self.confirm_password:
+            errors.append("Los campos 'password' y 'confirm_password' deben ser iguales")
+        
+        # Validar campo role (obligatorio, valores específicos)
+        valid_roles = ['Administrador', 'Compras', 'Ventas', 'Logistica', 'Cliente']
+        if not self.role or not self.role.strip():
+            errors.append("El campo 'role' es obligatorio")
+        elif self.role.strip() not in valid_roles:
+            errors.append(f"El campo 'role' debe ser uno de los siguientes: {', '.join(valid_roles)}")
+        
+        if errors:
+            raise ValueError("; ".join(errors))
+    
+    def _is_valid_email(self, email: str) -> bool:
+        """Valida el formato de email"""
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+    
+    def __repr__(self) -> str:
+        return f"<AdminUserCreate(name='{self.name}', email='{self.email}', role='{self.role}')>"

@@ -52,13 +52,13 @@ class TestUserService(unittest.TestCase):
     def test_create_success(self):
         """Prueba crear usuario exitosamente"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        mock_user = User(id='123', name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         
         # Ejecutar
         result = self.service.create(
-            institution_name='Test Hospital',
+            name='Test Hospital',
             email='test@hospital.com',
             tax_id='123456789',
             address='Test Address',
@@ -84,7 +84,7 @@ class TestUserService(unittest.TestCase):
         # Ejecutar y verificar
         with self.assertRaises(ValidationError) as context:
             self.service.create(
-                institution_name='Test Hospital',
+                name='Test Hospital',
                 email='test@hospital.com',
                 tax_id='123456789',
                 address='Test Address',
@@ -108,7 +108,7 @@ class TestUserService(unittest.TestCase):
         # Ejecutar y verificar
         with self.assertRaises(BusinessLogicError) as context:
             self.service.create(
-                institution_name='Test Hospital',
+                name='Test Hospital',
                 email='test@hospital.com',
                 tax_id='123456789',
                 address='Test Address',
@@ -126,7 +126,7 @@ class TestUserService(unittest.TestCase):
     def test_get_by_id_success(self):
         """Prueba obtener usuario por ID exitosamente"""
         # Configurar mock
-        mock_user = User(id='123', institution_name='Test Hospital')
+        mock_user = User(id='123', name='Test Hospital')
         self.mock_user_repository.get_by_id.return_value = mock_user
         
         # Ejecutar
@@ -174,15 +174,15 @@ class TestUserService(unittest.TestCase):
     def test_update_success(self):
         """Prueba actualizar usuario exitosamente"""
         # Configurar mock
-        mock_user = User(id='123', institution_name='Updated Hospital')
+        mock_user = User(id='123', name='Updated Hospital')
         self.mock_user_repository.update.return_value = mock_user
         
         # Ejecutar
-        result = self.service.update('123', institution_name='Updated Hospital')
+        result = self.service.update('123', name='Updated Hospital')
         
         # Verificar
         self.assertEqual(result, mock_user)
-        self.mock_user_repository.update.assert_called_once_with('123', institution_name='Updated Hospital')
+        self.mock_user_repository.update.assert_called_once_with('123', name='Updated Hospital')
     
     def test_update_business_logic_error(self):
         """Prueba actualizar usuario con error"""
@@ -191,7 +191,7 @@ class TestUserService(unittest.TestCase):
         
         # Ejecutar y verificar
         with self.assertRaises(BusinessLogicError) as context:
-            self.service.update('123', institution_name='Updated Hospital')
+            self.service.update('123', name='Updated Hospital')
         
         self.assertIn("Error al actualizar usuario", str(context.exception))
     
@@ -241,27 +241,27 @@ class TestUserService(unittest.TestCase):
         
         self.assertIn("Error al eliminar todos los usuarios", str(context.exception))
     
-    def test_validate_business_rules_institution_name_required(self):
+    def test_validate_business_rules_name_required(self):
         """Prueba validación de nombre de institución obligatorio"""
         # Ejecutar y verificar
         with self.assertRaises(ValueError) as context:
-            self.service.validate_business_rules(institution_name='')
+            self.service.validate_business_rules(name='')
         
-        self.assertIn("Nombre de la institución", str(context.exception))
+        self.assertIn("Nombre", str(context.exception))
     
-    def test_validate_business_rules_institution_name_too_long(self):
+    def test_validate_business_rules_name_too_long(self):
         """Prueba validación de nombre de institución muy largo"""
         # Ejecutar y verificar
         with self.assertRaises(ValueError) as context:
-            self.service.validate_business_rules(institution_name='A' * 101)
+            self.service.validate_business_rules(name='A' * 101)
         
         self.assertIn("100 caracteres", str(context.exception))
     
-    def test_validate_business_rules_institution_name_too_short(self):
+    def test_validate_business_rules_name_too_short(self):
         """Prueba validación de nombre de institución muy corto"""
         # Ejecutar y verificar
         with self.assertRaises(ValueError) as context:
-            self.service.validate_business_rules(institution_name='A')
+            self.service.validate_business_rules(name='A')
         
         self.assertIn("2 caracteres", str(context.exception))
     
@@ -349,8 +349,8 @@ class TestUserService(unittest.TestCase):
         """Prueba obtener resumen de usuarios exitosamente"""
         # Configurar mock
         mock_users = [
-            User(id='1', institution_name='Hospital 1', email='h1@test.com'),
-            User(id='2', institution_name='Hospital 2', email='h2@test.com')
+            User(id='1', name='Hospital 1', email='h1@test.com'),
+            User(id='2', name='Hospital 2', email='h2@test.com')
         ]
         self.mock_user_repository.get_all.return_value = mock_users
         
@@ -360,7 +360,7 @@ class TestUserService(unittest.TestCase):
         # Verificar
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]['id'], '1')
-        self.assertEqual(result[0]['institution_name'], 'Hospital 1')
+        self.assertEqual(result[0]['name'], 'Hospital 1')
         self.assertEqual(result[0]['email'], 'h1@test.com')
     
     def test_get_users_summary_business_logic_error(self):
@@ -400,7 +400,7 @@ class TestUserService(unittest.TestCase):
     def test_create_user_with_validation_success(self):
         """Prueba crear usuario con validación completa exitosamente"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        mock_user = User(id='123', name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         self.mock_keycloak_client.get_available_roles.return_value = ['Cliente']
@@ -409,7 +409,7 @@ class TestUserService(unittest.TestCase):
         
         # Ejecutar
         result = self.service.create_user_with_validation(
-            institution_name='Test Hospital',
+            name='Test Hospital',
             email='test@hospital.com',
             tax_id='123456789',
             address='Test Address',
@@ -430,7 +430,7 @@ class TestUserService(unittest.TestCase):
     def test_create_user_with_validation_keycloak_error(self):
         """Prueba crear usuario con error en Keycloak"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        mock_user = User(id='123', name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         self.mock_keycloak_client.get_available_roles.return_value = ['Cliente']
@@ -440,7 +440,7 @@ class TestUserService(unittest.TestCase):
         # Ejecutar y verificar
         with self.assertRaises(BusinessLogicError) as context:
             self.service.create_user_with_validation(
-                institution_name='Test Hospital',
+                name='Test Hospital',
                 email='test@hospital.com',
                 tax_id='123456789',
                 address='Test Address',
@@ -460,7 +460,7 @@ class TestUserService(unittest.TestCase):
     def test_create_user_with_validation_sets_enabled_false(self):
         """Prueba que el campo enabled se establece como False por defecto"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        mock_user = User(id='123', name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         self.mock_keycloak_client.get_available_roles.return_value = ['Cliente']
@@ -469,7 +469,7 @@ class TestUserService(unittest.TestCase):
         
         # Ejecutar
         result = self.service.create_user_with_validation(
-            institution_name='Test Hospital',
+            name='Test Hospital',
             email='test@hospital.com',
             tax_id='123456789',
             address='Test Address',
@@ -497,7 +497,7 @@ class TestUserService(unittest.TestCase):
     def test_create_with_logo_file_success(self):
         """Prueba crear usuario con archivo de logo exitosamente"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        mock_user = User(id='123', name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         self.mock_cloud_storage_service.upload_image.return_value = (True, "Success", "https://storage.googleapis.com/bucket/logo.jpg")
@@ -508,7 +508,7 @@ class TestUserService(unittest.TestCase):
         
         # Ejecutar
         result = self.service.create(
-            institution_name='Test Hospital',
+            name='Test Hospital',
             email='test@hospital.com',
             tax_id='123456789',
             address='Test Address',
@@ -540,7 +540,7 @@ class TestUserService(unittest.TestCase):
         # Ejecutar y verificar
         with self.assertRaises(BusinessLogicError) as context:
             self.service.create(
-                institution_name='Test Hospital',
+                name='Test Hospital',
                 email='test@hospital.com',
                 tax_id='123456789',
                 address='Test Address',
@@ -559,13 +559,13 @@ class TestUserService(unittest.TestCase):
     def test_create_without_logo_file(self):
         """Prueba crear usuario sin archivo de logo"""
         # Configurar mocks
-        mock_user = User(id='123', institution_name='Test Hospital', enabled=False)
+        mock_user = User(id='123', name='Test Hospital', enabled=False)
         self.mock_user_repository.create.return_value = mock_user
         self.mock_user_repository.get_by_email.return_value = None  # Email no existe
         
         # Ejecutar
         result = self.service.create(
-            institution_name='Test Hospital',
+            name='Test Hospital',
             email='test@hospital.com',
             tax_id='123456789',
             address='Test Address',
@@ -654,6 +654,90 @@ class TestUserService(unittest.TestCase):
             self.service._process_logo_file(mock_file)
         
         self.assertIn("Error al procesar archivo de logo", str(context.exception))
+    
+    def test_create_admin_user_success(self):
+        """Test de creación exitosa de usuario admin"""
+        # Configurar mocks
+        self.mock_user_repository.get_by_email.return_value = None
+        self.mock_keycloak_client.create_user.return_value = 'keycloak-123'
+        self.mock_keycloak_client.assign_role_to_user.return_value = None
+        
+        mock_user = User(id='123', name='Admin User', email='admin@test.com', enabled=True)
+        self.mock_user_repository.create_admin_user.return_value = mock_user
+        
+        # Ejecutar
+        result = self.service.create_admin_user(
+            name='Admin User',
+            email='admin@test.com',
+            password='password123',
+            role='Administrador'
+        )
+        
+        # Verificar
+        self.assertEqual(result['name'], 'Admin User')
+        self.assertEqual(result['email'], 'admin@test.com')
+        self.assertEqual(result['role'], 'Administrador')
+        self.assertTrue(result['enabled'])
+        
+        # Verificar llamadas
+        self.mock_user_repository.get_by_email.assert_called_once_with('admin@test.com')
+        self.mock_keycloak_client.create_user.assert_called_once_with('admin@test.com', 'password123', 'Admin User')
+        self.mock_keycloak_client.assign_role_to_user.assert_called_once_with('keycloak-123', 'Administrador')
+        self.mock_user_repository.create_admin_user.assert_called_once_with(
+            name='Admin User',
+            email='admin@test.com',
+            keycloak_id='keycloak-123',
+            enabled=True
+        )
+    
+    def test_create_admin_user_email_exists(self):
+        """Test de creación de usuario admin con email existente"""
+        # Configurar mock
+        self.mock_user_repository.get_by_email.return_value = User(id='123', name='Existing User')
+        
+        # Ejecutar y verificar
+        with self.assertRaises(BusinessLogicError) as context:
+            self.service.create_admin_user(
+                name='Admin User',
+                email='admin@test.com',
+                password='password123',
+                role='Administrador'
+            )
+        
+        self.assertIn("Ya existe un usuario con este email", str(context.exception))
+    
+    def test_create_admin_user_keycloak_error(self):
+        """Test de creación de usuario admin con error en Keycloak"""
+        # Configurar mocks
+        self.mock_user_repository.get_by_email.return_value = None
+        self.mock_keycloak_client.create_user.side_effect = Exception("Keycloak error")
+        
+        # Ejecutar y verificar
+        with self.assertRaises(BusinessLogicError) as context:
+            self.service.create_admin_user(
+                name='Admin User',
+                email='admin@test.com',
+                password='password123',
+                role='Administrador'
+            )
+        
+        self.assertIn("Error al crear usuario", str(context.exception))
+    
+    def test_create_admin_user_invalid_data(self):
+        """Test de creación de usuario admin con datos inválidos"""
+        # Ejecutar y verificar
+        with self.assertRaises(ValidationError) as context:
+            self.service.create_admin_user(
+                name='',  # Nombre vacío
+                email='invalid-email',  # Email inválido
+                password='123',  # Password muy corto
+                role='InvalidRole'  # Rol inválido
+            )
+        
+        self.assertIn("name", str(context.exception))
+        self.assertIn("email", str(context.exception))
+        self.assertIn("password", str(context.exception))
+        self.assertIn("role", str(context.exception))
 
 
 if __name__ == '__main__':

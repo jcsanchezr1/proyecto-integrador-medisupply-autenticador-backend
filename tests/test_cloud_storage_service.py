@@ -5,7 +5,7 @@ import unittest
 import sys
 import os
 from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Agregar el directorio padre al path para importar la app
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -396,7 +396,7 @@ class TestCloudStorageService(unittest.TestCase):
         # Verificar que se pasó la expiración correcta
         call_args = mock_blob.generate_signed_url.call_args
         expiration = call_args[1]['expiration']
-        expected_expiration = datetime.utcnow() + timedelta(hours=24)
+        expected_expiration = datetime.now(timezone.utc) + timedelta(hours=24)
         # Permitir diferencia de hasta 1 segundo
         self.assertLess(abs((expiration - expected_expiration).total_seconds()), 1)
 

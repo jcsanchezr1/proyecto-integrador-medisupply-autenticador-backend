@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, String, DateTime, Text, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 from .base_repository import BaseRepository
@@ -22,7 +22,7 @@ class UserDB(Base):
     __tablename__ = 'users_medisupply'
     
     id = Column(String(36), primary_key=True)
-    institution_name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False)
     tax_id = Column(String(50), nullable=True)
     email = Column(String(100), nullable=False, unique=True)
     address = Column(String(200), nullable=True)
@@ -61,7 +61,7 @@ class UserRepository(BaseRepository):
         """Convierte un modelo de DB a modelo de dominio"""
         return User(
             id=db_user.id,
-            institution_name=db_user.institution_name,
+            name=db_user.name,
             tax_id=db_user.tax_id,
             email=db_user.email,
             address=db_user.address,
@@ -81,7 +81,7 @@ class UserRepository(BaseRepository):
         """Convierte un modelo de dominio a modelo de DB"""
         return UserDB(
             id=user.id,
-            institution_name=user.institution_name,
+            name=user.name,
             tax_id=user.tax_id,
             email=user.email,
             address=user.address,
@@ -124,6 +124,37 @@ class UserRepository(BaseRepository):
         finally:
             session.close()
     
+    def create_admin_user(self, **kwargs) -> User:
+        """Crea un nuevo usuario admin sin validación completa"""
+        session = self._get_session()
+        try:
+            # Crear modelo de dominio
+            user = User(**kwargs)
+            # No validar todos los campos, solo los básicos
+            if not user.name or not user.name.strip():
+                raise ValueError("El campo 'name' es obligatorio")
+            if not user.email or not user.email.strip():
+                raise ValueError("El campo 'email' es obligatorio")
+            
+            # Verificar que el email no exista
+            existing = session.query(UserDB).filter(UserDB.email == user.email).first()
+            if existing:
+                raise ValueError("Ya existe un usuario con este correo electrónico")
+            
+            # Convertir a modelo de DB y guardar
+            db_user = self._model_to_db(user)
+            session.add(db_user)
+            session.commit()
+            session.refresh(db_user)
+            
+            return self._db_to_model(db_user)
+            
+        except SQLAlchemyError as e:
+            session.rollback()
+            raise Exception(f"Error al crear usuario: {str(e)}")
+        finally:
+            session.close()
+    
     def get_by_id(self, user_id: str) -> Optional[User]:
         """Obtiene un usuario por ID"""
         session = self._get_session()
@@ -141,7 +172,7 @@ class UserRepository(BaseRepository):
         """Obtiene todos los usuarios ordenados por nombre de institución"""
         session = self._get_session()
         try:
-            query = session.query(UserDB).order_by(UserDB.institution_name.asc()).offset(offset)
+            query = session.query(UserDB).order_by(UserDB.name.asc()).offset(offset)
             if limit:
                 query = query.limit(limit)
             
@@ -165,7 +196,7 @@ class UserRepository(BaseRepository):
                 if hasattr(db_user, key):
                     setattr(db_user, key, value)
             
-            db_user.updated_at = datetime.utcnow()
+            db_user.updated_at = datetime.now(timezone.utc)
             session.commit()
             session.refresh(db_user)
             

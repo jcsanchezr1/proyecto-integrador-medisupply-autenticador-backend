@@ -147,7 +147,7 @@ class TestKeycloakClient(unittest.TestCase):
         user_id = self.client.create_user(
             email='test@hospital.com',
             password='password123',
-            institution_name='Test Hospital'
+            name='Test Hospital'
         )
         
         # Verificar
@@ -171,7 +171,7 @@ class TestKeycloakClient(unittest.TestCase):
             self.client.create_user(
                 email='test@hospital.com',
                 password='password123',
-                institution_name='Test Hospital'
+                name='Test Hospital'
             )
         
         self.assertIn("No se pudo obtener el ID del usuario creado", str(context.exception))
@@ -189,7 +189,7 @@ class TestKeycloakClient(unittest.TestCase):
             self.client.create_user(
                 email='test@hospital.com',
                 password='password123',
-                institution_name='Test Hospital'
+                name='Test Hospital'
             )
         
         self.assertIn("Error inesperado al crear usuario en Keycloak", str(context.exception))

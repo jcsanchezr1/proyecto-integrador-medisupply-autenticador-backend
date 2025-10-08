@@ -55,7 +55,7 @@ class KeycloakClient:
         except Exception as e:
             raise BusinessLogicError(f"Error inesperado al obtener token de Keycloak: {str(e)}")
     
-    def create_user(self, email: str, password: str, institution_name: str) -> str:
+    def create_user(self, email: str, password: str, name: str) -> str:
         """Crea un usuario en Keycloak"""
         try:
             token = self._get_admin_token()
@@ -69,7 +69,7 @@ class KeycloakClient:
             user_data = {
                 "username": email,
                 "email": email,
-                "firstName": institution_name,
+                "firstName": name,
                 "enabled": True,
                 "emailVerified": True,
                 "credentials": [

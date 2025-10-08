@@ -46,7 +46,7 @@ class TestUserRepository(unittest.TestCase):
         # Crear mock de UserDB
         db_user = Mock()
         db_user.id = '123'
-        db_user.institution_name = 'Test Hospital'
+        db_user.name = 'Test Hospital'
         db_user.tax_id = '123456789'
         db_user.email = 'test@hospital.com'
         db_user.address = 'Test Address'
@@ -66,7 +66,7 @@ class TestUserRepository(unittest.TestCase):
         # Verificar
         self.assertIsInstance(user, User)
         self.assertEqual(user.id, '123')
-        self.assertEqual(user.institution_name, 'Test Hospital')
+        self.assertEqual(user.name, 'Test Hospital')
         self.assertEqual(user.email, 'test@hospital.com')
     
     def test_model_to_db_conversion(self):
@@ -74,7 +74,7 @@ class TestUserRepository(unittest.TestCase):
         # Crear modelo de dominio
         user = User(
             id='123',
-            institution_name='Test Hospital',
+            name='Test Hospital',
             tax_id='123456789',
             email='test@hospital.com',
             address='Test Address',
@@ -95,7 +95,7 @@ class TestUserRepository(unittest.TestCase):
         # Verificar
         self.assertIsInstance(db_user, UserDB)
         self.assertEqual(db_user.id, '123')
-        self.assertEqual(db_user.institution_name, 'Test Hospital')
+        self.assertEqual(db_user.name, 'Test Hospital')
         self.assertEqual(db_user.email, 'test@hospital.com')
     
     @patch('app.repositories.user_repository.UserRepository._get_session')
@@ -121,7 +121,7 @@ class TestUserRepository(unittest.TestCase):
             
             # Ejecutar
             result = self.repository.create(
-                institution_name='Test Hospital',
+                name='Test Hospital',
                 email='test@hospital.com',
                 tax_id='123456789',
                 address='Test Address',
@@ -156,7 +156,7 @@ class TestUserRepository(unittest.TestCase):
         # Ejecutar y verificar
         with self.assertRaises(ValueError) as context:
             self.repository.create(
-                institution_name='Test Hospital',
+                name='Test Hospital',
                 email='test@hospital.com',
                 tax_id='123456789',
                 address='Test Address',
@@ -193,7 +193,7 @@ class TestUserRepository(unittest.TestCase):
             # Ejecutar y verificar
             with self.assertRaises(Exception) as context:
                 self.repository.create(
-                    institution_name='Test Hospital',
+                    name='Test Hospital',
                     email='test@hospital.com',
                     tax_id='123456789',
                     address='Test Address',
@@ -291,7 +291,7 @@ class TestUserRepository(unittest.TestCase):
         with patch.object(self.repository, '_db_to_model', return_value=User(id='123')):
             
             # Ejecutar
-            result = self.repository.update('123', institution_name='Updated Hospital')
+            result = self.repository.update('123', name='Updated Hospital')
             
             # Verificar
             self.assertIsInstance(result, User)
@@ -311,7 +311,7 @@ class TestUserRepository(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = None  # No encontrado
         
         # Ejecutar
-        result = self.repository.update('123', institution_name='Updated Hospital')
+        result = self.repository.update('123', name='Updated Hospital')
         
         # Verificar
         self.assertIsNone(result)

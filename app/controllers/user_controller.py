@@ -116,7 +116,7 @@ class UserController(BaseController):
             
             # Validar campos requeridos
             required_fields = [
-                'institution_name', 'tax_id', 'email', 'address', 'phone', 
+                'name', 'tax_id', 'email', 'address', 'phone', 
                 'institution_type', 'specialty', 'applicant_name', 'applicant_email', 
                 'password', 'confirm_password'
             ]
@@ -125,7 +125,7 @@ class UserController(BaseController):
                     raise ValidationError(f"El campo '{field}' es obligatorio")
             
             return {
-                'institution_name': json_data['institution_name'].strip(),
+                'name': json_data['name'].strip(),
                 'tax_id': json_data['tax_id'].strip(),
                 'email': json_data['email'].strip(),
                 'address': json_data['address'].strip(),
@@ -152,7 +152,7 @@ class UserController(BaseController):
             
             # Validar campos requeridos
             required_fields = [
-                'institution_name', 'tax_id', 'email', 'address', 'phone', 
+                'name', 'tax_id', 'email', 'address', 'phone', 
                 'institution_type', 'specialty', 'applicant_name', 'applicant_email', 
                 'password', 'confirm_password'
             ]
@@ -168,7 +168,7 @@ class UserController(BaseController):
                     logo_file = None
             
             return {
-                'institution_name': form_data['institution_name'].strip(),
+                'name': form_data['name'].strip(),
                 'tax_id': form_data['tax_id'].strip(),
                 'email': form_data['email'].strip(),
                 'address': form_data['address'].strip(),
@@ -187,25 +187,6 @@ class UserController(BaseController):
                 raise
             raise ValidationError(f"Error al procesar formulario: {str(e)}")
     
-
-
-class UserHealthController(BaseController):
-    """Controlador para health check de usuarios"""
-    
-    def get(self) -> Tuple[Dict[str, Any], int]:
-        """GET /auth/user/ping - Health check"""
-        try:
-            return self.success_response(
-                data={
-                    'service': 'users',
-                    'status': 'healthy',
-                    'version': '1.0.0'
-                },
-                message="Servicio de usuarios funcionando correctamente"
-            )
-        except Exception as e:
-            return self.handle_exception(e)
-
 
 class UserDeleteAllController(BaseController):
     """Controlador para eliminar todos los usuarios"""
@@ -230,3 +211,53 @@ class UserDeleteAllController(BaseController):
             return self.error_response("Error temporal del sistema. Contacte soporte técnico si persiste", 500)
         except Exception as e:
             return self.error_response("Error temporal del sistema. Contacte soporte técnico si persiste", 500)
+
+
+class AdminUserController(BaseController):
+    """Controlador para operaciones de administración de usuarios"""
+    
+    def __init__(self, user_service=None):
+        self.user_service = user_service or UserService()
+    
+    def post(self) -> Tuple[Dict[str, Any], int]:
+        """POST /auth/admin/users - Crear usuario administrado"""
+        try:
+            # Obtener datos del request
+            json_data = request.get_json()
+            if not json_data:
+                return self.error_response("El cuerpo de la petición JSON está vacío", 400)
+            
+            # Extraer datos del request
+            name = json_data.get('name', '').strip()
+            email = json_data.get('email', '').strip()
+            password = json_data.get('password', '').strip()
+            confirm_password = json_data.get('confirm_password', '').strip()
+            role = json_data.get('role', '').strip()
+            
+            # Validar campos obligatorios
+            if not name:
+                return self.error_response("El campo 'name' es obligatorio", 400)
+            if not email:
+                return self.error_response("El campo 'email' es obligatorio", 400)
+            if not password:
+                return self.error_response("El campo 'password' es obligatorio", 400)
+            if not confirm_password:
+                return self.error_response("El campo 'confirm_password' es obligatorio", 400)
+            if not role:
+                return self.error_response("El campo 'role' es obligatorio", 400)
+            
+            # Crear usuario usando el servicio
+            user_data = self.user_service.create_admin_user(name, email, password, role)
+            
+            return self.success_response(
+                data=user_data,
+                message="Usuario creado exitosamente",
+                status_code=201
+            )
+            
+        except ValidationError as e:
+            return self.error_response(str(e), 400)
+        except BusinessLogicError as e:
+            return self.error_response(str(e), 400)
+        except Exception as e:
+            return self.handle_exception(e)

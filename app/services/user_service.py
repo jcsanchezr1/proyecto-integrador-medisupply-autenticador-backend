@@ -2,13 +2,13 @@
 Servicio de Usuario - Lógica de negocio para usuarios
 """
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from werkzeug.datastructures import FileStorage
 
 from .base_service import BaseService
 from .cloud_storage_service import CloudStorageService
 from ..repositories.user_repository import UserRepository
-from ..models.user_model import User
+from ..models.user_model import User, AdminUserCreate
 from ..exceptions.custom_exceptions import ValidationError, BusinessLogicError
 from ..external.keycloak_client import KeycloakClient
 from ..config.settings import Config
@@ -94,14 +94,14 @@ class UserService(BaseService):
         errors = []
         
         # Validar campos obligatorios
-        if 'institution_name' in kwargs:
-            institution_name = kwargs['institution_name'].strip() if kwargs['institution_name'] else ''
-            if not institution_name:
-                errors.append("El campo 'Nombre de la institución' es obligatorio")
-            elif len(institution_name) > 100:
-                errors.append("El nombre de la institución no puede exceder 100 caracteres")
-            elif len(institution_name) < 2:
-                errors.append("El nombre de la institución debe tener al menos 2 caracteres")
+        if 'name' in kwargs:
+            name = kwargs['name'].strip() if kwargs['name'] else ''
+            if not name:
+                errors.append("El campo 'Nombre' es obligatorio")
+            elif len(name) > 100:
+                errors.append("El nombre no puede exceder 100 caracteres")
+            elif len(name) < 2:
+                errors.append("El nombre debe tener al menos 2 caracteres")
         
         if 'email' in kwargs:
             email = kwargs['email'].strip() if kwargs['email'] else ''
@@ -190,7 +190,7 @@ class UserService(BaseService):
             return [
                 {
                     'id': user.id,
-                    'institution_name': user.institution_name,
+                    'name': user.name,
                     'email': user.email,
                     'institution_type': user.institution_type,
                     'phone': user.phone
@@ -233,7 +233,7 @@ class UserService(BaseService):
                 keycloak_user_id = self.keycloak_client.create_user(
                     email=kwargs['email'],
                     password=kwargs['password'],
-                    institution_name=kwargs['institution_name']
+                    name=kwargs['name']
                 )
                 
                 # Asignar rol en Keycloak
@@ -301,3 +301,73 @@ class UserService(BaseService):
             if isinstance(e, ValidationError):
                 raise
             raise ValidationError(f"Error al procesar archivo de logo: {str(e)}")
+    
+    def create_admin_user(self, name: str, email: str, password: str, role: str) -> Dict[str, Any]:
+        """
+        Crea un usuario administrado por un administrador
+        
+        Args:
+            name: Nombre del usuario
+            email: Email del usuario
+            password: Contraseña del usuario
+            role: Rol del usuario en Keycloak
+            
+        Returns:
+            Dict con la información del usuario creado
+            
+        Raises:
+            ValidationError: Si los datos de entrada son inválidos
+            BusinessLogicError: Si hay error en la lógica de negocio
+        """
+        # Crear modelo de datos y validar
+        try:
+            admin_user = AdminUserCreate(
+                name=name,
+                email=email,
+                password=password,
+                confirm_password=password,  # Para validación
+                role=role
+            )
+            admin_user.validate()
+        except ValueError as e:
+            raise ValidationError(str(e))
+        
+        # Verificar que el usuario no existe
+        existing_user = self.user_repository.get_by_email(email)
+        if existing_user:
+            raise BusinessLogicError("Ya existe un usuario con este email")
+        
+        # Crear usuario en Keycloak
+        try:
+            keycloak_id = self.keycloak_client.create_user(email, password, name)
+            
+            # Asignar rol en Keycloak
+            self.keycloak_client.assign_role_to_user(keycloak_id, role)
+            
+            # Crear usuario en base de datos local
+            # Usar método específico para usuarios admin que no valida todos los campos
+            created_user = self.user_repository.create_admin_user(
+                name=name,
+                email=email,
+                keycloak_id=keycloak_id,
+                enabled=True
+            )
+            
+            return {
+                'id': created_user.id,
+                'name': created_user.name,
+                'email': created_user.email,
+                'role': role,
+                'enabled': created_user.enabled,
+                'created_at': created_user.created_at.isoformat() if created_user.created_at else None
+            }
+            
+        except Exception as e:
+            # Si hay error, intentar limpiar el usuario de Keycloak
+            try:
+                if 'keycloak_id' in locals():
+                    self.keycloak_client.delete_user(keycloak_id)
+            except:
+                pass  # Ignorar errores de limpieza
+            
+            raise BusinessLogicError(f"Error al crear usuario: {str(e)}")
