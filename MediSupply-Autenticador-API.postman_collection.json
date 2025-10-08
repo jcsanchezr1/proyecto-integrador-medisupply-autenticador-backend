@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "1b3d434a-9437-4db5-aa3b-78a44bab739c",
+		"_postman_id": "68931b1b-2f62-4c88-8608-89f4123aef3e",
 		"name": "MediSupply Autenticador API",
 		"description": "Colección de endpoints para el servicio de autenticación MediSupply con automatización de pruebas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-1b3d434a-9437-4db5-aa3b-78a44bab739c?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-68931b1b-2f62-4c88-8608-89f4123aef3e?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -140,6 +140,9 @@
 							"const logoFilename = nombreInstitucion.toLowerCase().replace(/\\s+/g, '_') + '_logo.png';",
 							"const direccionAleatoria = 'Calle ' + (Math.floor(Math.random() * 999) + 1) + ' #' + (Math.floor(Math.random() * 99) + 1) + '-' + (Math.floor(Math.random() * 99) + 1) + ', Bogotá';",
 							"",
+							"// Generar contraseña aleatoria",
+							"const passwordAleatorio = 'password' + (Math.floor(Math.random() * 1000) + 100);",
+							"",
 							"// Guardar en variables de entorno",
 							"pm.environment.set('nombre_institucion', nombreInstitucion);",
 							"pm.environment.set('email_institucion', emailAleatorio);",
@@ -151,6 +154,7 @@
 							"pm.environment.set('email_solicitante', emailSolicitante);",
 							"pm.environment.set('logo_filename', logoFilename);",
 							"pm.environment.set('direccion', direccionAleatoria);",
+							"pm.environment.set('password_usuario', passwordAleatorio);",
 							"",
 							"console.log('Datos aleatorios generados:');",
 							"console.log('Institución:', nombreInstitucion);",
@@ -214,10 +218,12 @@
 							"    const jsonData = pm.response.json();",
 							"    const userId = jsonData.data.id;",
 							"    const userEmail = jsonData.data.email;",
+							"    const userPassword = pm.environment.get('password_usuario');",
 							"    ",
 							"    // Guardar en variables globales",
 							"    pm.globals.set('created_user_id', userId);",
 							"    pm.globals.set('created_user_email', userEmail);",
+							"    pm.globals.set('created_user_password', userPassword);",
 							"    ",
 							"    // Verificar que se guardó correctamente",
 							"    const savedId = pm.globals.get('created_user_id');",
@@ -250,7 +256,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"institution_name\": \"{{nombre_institucion}}\",\n  \"tax_id\": \"{{tax_id}}\",\n  \"email\": \"{{email_institucion}}\",\n  \"address\": \"{{direccion}}\",\n  \"phone\": \"{{telefono}}\",\n  \"institution_type\": \"{{tipo_institucion}}\",\n  \"logo_filename\": \"{{logo_filename}}\",\n  \"specialty\": \"{{especialidad}}\",\n  \"applicant_name\": \"{{nombre_solicitante}}\",\n  \"applicant_email\": \"{{email_solicitante}}\",\n  \"password\": \"password{{Math.floor(Math.random() * 1000) + 100}}\",\n  \"confirm_password\": \"password{{Math.floor(Math.random() * 1000) + 100}}\"\n}"
+					"raw": "{\n  \"institution_name\": \"{{nombre_institucion}}\",\n  \"tax_id\": \"{{tax_id}}\",\n  \"email\": \"{{email_institucion}}\",\n  \"address\": \"{{direccion}}\",\n  \"phone\": \"{{telefono}}\",\n  \"institution_type\": \"{{tipo_institucion}}\",\n  \"logo_filename\": \"{{logo_filename}}\",\n  \"specialty\": \"{{especialidad}}\",\n  \"applicant_name\": \"{{nombre_solicitante}}\",\n  \"applicant_email\": \"{{email_solicitante}}\",\n  \"password\": \"{{password_usuario}}\",\n  \"confirm_password\": \"{{password_usuario}}\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -1220,6 +1226,261 @@
 			"response": []
 		},
 		{
+			"name": "Auth Token - Exitoso",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta exitosa de autenticación",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has access_token\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('access_token');",
+							"    pm.expect(responseJson.access_token).to.be.a('string');",
+							"    pm.expect(responseJson.access_token).to.not.be.empty;",
+							"});",
+							"",
+							"pm.test(\"Response has token_type\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('token_type');",
+							"    pm.expect(responseJson.token_type).to.eql('Bearer');",
+							"});",
+							"",
+							"pm.test(\"Response has expires_in\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('expires_in');",
+							"    pm.expect(responseJson.expires_in).to.be.a('number');",
+							"    pm.expect(responseJson.expires_in).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"Response has refresh_token\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('refresh_token');",
+							"    pm.expect(responseJson.refresh_token).to.be.a('string');",
+							"    pm.expect(responseJson.refresh_token).to.not.be.empty;",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 5000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});",
+							"",
+							"// Guardar token para uso posterior",
+							"const responseJson = pm.response.json();",
+							"if (responseJson && responseJson.access_token) {",
+							"    pm.globals.set('auth_token', responseJson.access_token);",
+							"    console.log('Token de autenticación guardado');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": \"{{created_user_email}}\",\n    \"password\": \"{{created_user_password}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/token",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"token"
+					]
+				},
+				"description": "Autentica un usuario usando las credenciales del usuario creado anteriormente"
+			},
+			"response": []
+		},
+		{
+			"name": "Auth Token - Unauthorized",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error de autenticación",
+							"pm.test(\"Status code is 401\", function () {",
+							"    pm.response.to.have.status(401);",
+							"});",
+							"",
+							"pm.test(\"Response has error\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('error');",
+							"});",
+							"",
+							"pm.test(\"Error contains invalid_grant\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    if (responseJson.error && typeof responseJson.error === 'object') {",
+							"        pm.expect(responseJson.error).to.have.property('error');",
+							"        pm.expect(responseJson.error.error).to.eql('invalid_grant');",
+							"    } else {",
+							"        pm.expect(responseJson.error).to.include('Credenciales inválidas');",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 5000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": \"{{created_user_email}}\",\n    \"password\": \"password_incorrecto_123\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/token",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"token"
+					]
+				},
+				"description": "Intenta autenticar con una contraseña incorrecta"
+			},
+			"response": []
+		},
+		{
+			"name": "Auth Token - Bad Request (Campos Vacíos)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error por campos vacíos",
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('error');",
+							"});",
+							"",
+							"pm.test(\"Error mentions required fields\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    const errorMessage = responseJson.error;",
+							"    pm.expect(errorMessage).to.include('obligatorio');",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 2000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": \"\",\n    \"password\": \"\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/token",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"token"
+					]
+				},
+				"description": "Intenta autenticar con campos vacíos"
+			},
+			"response": []
+		},
+		{
+			"name": "Auth Token - Bad Request (Email Inválido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error por email inválido",
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('error');",
+							"});",
+							"",
+							"pm.test(\"Error mentions email validation\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    const errorMessage = responseJson.error;",
+							"    pm.expect(errorMessage).to.include('email válido');",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 2000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": \"email_invalido\",\n    \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/token",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"token"
+					]
+				},
+				"description": "Intenta autenticar con un email inválido"
+			},
+			"response": []
+		},
+		{
 			"name": "Eliminar Todos los Usuarios  - Exitoso",
 			"event": [
 				{
@@ -1253,13 +1514,13 @@
 							"",
 							"// Limpiar variables globales después de eliminar",
 							"if (pm.response.code === 200) {",
-							"    pm.globals.unset('created_user_id');",
-							"    pm.globals.unset('created_user_email');",
 							"    pm.globals.set('users_deleted', new Date().toISOString());",
 							"    console.log('Todos los usuarios eliminados exitosamente');",
 							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
 					}
 				}
 			],
@@ -1358,6 +1619,16 @@
 		{
 			"key": "test_environment",
 			"value": "development",
+			"type": "string"
+		},
+		{
+			"key": "user_email",
+			"value": "test@example.com",
+			"type": "string"
+		},
+		{
+			"key": "user_password",
+			"value": "password123",
 			"type": "string"
 		}
 	]
