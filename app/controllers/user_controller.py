@@ -78,10 +78,15 @@ class UserController(BaseController):
             return self.handle_exception(e)
     
     def post(self) -> Tuple[Dict[str, Any], int]:
-        """POST /auth/user - Crear nuevo usuario (solo JSON)"""
+        """POST /auth/user - Crear nuevo usuario (JSON o multipart/form-data)"""
         try:
-            # Procesar petición JSON
-            user_data = self._process_json_request()
+            # Determinar tipo de petición
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                # Procesar petición multipart (con archivo)
+                user_data = self._process_multipart_request()
+            else:
+                # Procesar petición JSON (sin archivo)
+                user_data = self._process_json_request()
             
             # Crear usuario
             user = self.user_service.create_user_with_validation(**user_data)
@@ -138,6 +143,49 @@ class UserController(BaseController):
             if isinstance(e, ValidationError):
                 raise
             raise ValidationError(f"Error al procesar JSON: {str(e)}")
+    
+    def _process_multipart_request(self) -> Dict[str, Any]:
+        """Procesa una petición multipart/form-data"""
+        try:
+            # Obtener datos del formulario
+            form_data = request.form.to_dict()
+            
+            # Validar campos requeridos
+            required_fields = [
+                'institution_name', 'tax_id', 'email', 'address', 'phone', 
+                'institution_type', 'specialty', 'applicant_name', 'applicant_email', 
+                'password', 'confirm_password'
+            ]
+            for field in required_fields:
+                if field not in form_data or not form_data[field]:
+                    raise ValidationError(f"El campo '{field}' es obligatorio")
+            
+            # Obtener archivo de logo si existe
+            logo_file = None
+            if 'logo' in request.files:
+                logo_file = request.files['logo']
+                if logo_file.filename == '':
+                    logo_file = None
+            
+            return {
+                'institution_name': form_data['institution_name'].strip(),
+                'tax_id': form_data['tax_id'].strip(),
+                'email': form_data['email'].strip(),
+                'address': form_data['address'].strip(),
+                'phone': form_data['phone'].strip(),
+                'institution_type': form_data['institution_type'].strip(),
+                'logo_file': logo_file,
+                'specialty': form_data['specialty'].strip(),
+                'applicant_name': form_data['applicant_name'].strip(),
+                'applicant_email': form_data['applicant_email'].strip(),
+                'password': form_data['password'].strip(),
+                'confirm_password': form_data['confirm_password'].strip()
+            }
+            
+        except Exception as e:
+            if isinstance(e, ValidationError):
+                raise
+            raise ValidationError(f"Error al procesar formulario: {str(e)}")
     
 
 

@@ -1,27 +1,48 @@
 """
 Servicio de Usuario - Lógica de negocio para usuarios
 """
+import logging
 from typing import List, Optional
+from werkzeug.datastructures import FileStorage
 
 from .base_service import BaseService
+from .cloud_storage_service import CloudStorageService
 from ..repositories.user_repository import UserRepository
 from ..models.user_model import User
 from ..exceptions.custom_exceptions import ValidationError, BusinessLogicError
 from ..external.keycloak_client import KeycloakClient
+from ..config.settings import Config
+
+logger = logging.getLogger(__name__)
 
 
 class UserService(BaseService):
     """Servicio para operaciones de negocio de usuarios"""
     
-    def __init__(self, user_repository=None, keycloak_client=None):
+    def __init__(self, user_repository=None, keycloak_client=None, cloud_storage_service=None, config=None):
         self.user_repository = user_repository or UserRepository()
         self.keycloak_client = keycloak_client or KeycloakClient()
+        self.config = config or Config()
+        self.cloud_storage_service = cloud_storage_service or CloudStorageService(self.config)
+        
+        logger.info("UserService inicializado con CloudStorageService")
     
     def create(self, **kwargs) -> User:
         """Crea un nuevo usuario con validaciones de negocio"""
         try:
             # Validar reglas de negocio
             self.validate_business_rules(**kwargs)
+            
+            # Procesar archivo de logo si se proporciona
+            logo_file = kwargs.get('logo_file')
+            logo_filename = None
+            logo_url = None
+            
+            if logo_file is not None:
+                logo_filename, logo_url = self._process_logo_file(logo_file)
+                if logo_filename:
+                    kwargs['logo_filename'] = logo_filename
+                    kwargs['logo_url'] = logo_url
             
             # Crear usuario
             user = self.user_repository.create(**kwargs)
@@ -239,3 +260,44 @@ class UserService(BaseService):
             raise ValidationError(str(e))
         except Exception as e:
             raise BusinessLogicError(f"Error al crear usuario: {str(e)}")
+    
+    def _process_logo_file(self, logo_file: Optional[FileStorage]) -> tuple[Optional[str], Optional[str]]:
+        """
+        Procesa el archivo de logo y lo sube a Google Cloud Storage
+        
+        Args:
+            logo_file: Archivo de imagen del logo
+            
+        Returns:
+            tuple[Optional[str], Optional[str]]: (filename, url_pública)
+        """
+        if not logo_file or not logo_file.filename:
+            logger.info("No se proporcionó archivo de logo")
+            return None, None
+        
+        try:
+            logger.info(f"Procesando archivo de logo: {logo_file.filename}")
+            
+            # Generar nombre único para el archivo
+            user_model = User()
+            unique_filename = user_model.generate_logo_filename(logo_file.filename)
+            logger.info(f"Nombre único generado: {unique_filename}")
+            
+            # Subir imagen a Google Cloud Storage
+            success, message, public_url = self.cloud_storage_service.upload_image(
+                logo_file, unique_filename
+            )
+            
+            logger.info(f"Resultado de subida - Success: {success}, URL: {public_url}")
+            
+            if not success:
+                raise ValidationError(f"Error al subir imagen: {message}")
+            
+            logger.info(f"Logo procesado exitosamente - Filename: {unique_filename}, URL: {public_url}")
+            return unique_filename, public_url
+            
+        except Exception as e:
+            logger.error(f"Error en _process_logo_file: {str(e)}")
+            if isinstance(e, ValidationError):
+                raise
+            raise ValidationError(f"Error al procesar archivo de logo: {str(e)}")

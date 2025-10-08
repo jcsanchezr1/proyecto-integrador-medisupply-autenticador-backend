@@ -21,6 +21,7 @@ class User(BaseModel):
         self.phone = kwargs.get('phone', '')
         self.institution_type = kwargs.get('institution_type', '')
         self.logo_filename = kwargs.get('logo_filename', '')
+        self.logo_url = kwargs.get('logo_url', '')
         self.specialty = kwargs.get('specialty', '')
         self.applicant_name = kwargs.get('applicant_name', '')
         self.applicant_email = kwargs.get('applicant_email', '')
@@ -43,6 +44,7 @@ class User(BaseModel):
             'phone': self.phone,
             'institution_type': self.institution_type,
             'logo_filename': self.logo_filename,
+            'logo_url': self.logo_url,
             'specialty': self.specialty,
             'applicant_name': self.applicant_name,
             'applicant_email': self.applicant_email,
@@ -174,6 +176,20 @@ class User(BaseModel):
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
     
+    def generate_logo_filename(self, original_filename: str) -> str:
+        """Genera un nombre único para el archivo de logo"""
+        if not original_filename:
+            return ''
+        
+        # Obtener extensión
+        if '.' not in original_filename:
+            return ''
+        
+        extension = original_filename.lower().split('.')[-1]
+        
+        # Generar nombre único con UUID
+        unique_id = str(uuid.uuid4())
+        return f"logo_{unique_id}.{extension}"
     
     def __repr__(self) -> str:
         return f"<User(id='{self.id}', institution_name='{self.institution_name}', email='{self.email}')>"

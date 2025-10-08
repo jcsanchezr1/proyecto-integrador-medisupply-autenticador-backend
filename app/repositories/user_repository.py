@@ -29,6 +29,7 @@ class UserDB(Base):
     phone = Column(String(20), nullable=True)
     institution_type = Column(String(20), nullable=True)
     logo_filename = Column(String(255), nullable=True)
+    logo_url = Column(Text, nullable=True)
     specialty = Column(String(20), nullable=True)
     applicant_name = Column(String(80), nullable=True)
     applicant_email = Column(String(100), nullable=True)
@@ -67,6 +68,7 @@ class UserRepository(BaseRepository):
             phone=db_user.phone,
             institution_type=db_user.institution_type,
             logo_filename=db_user.logo_filename,
+            logo_url=db_user.logo_url,
             specialty=db_user.specialty,
             applicant_name=db_user.applicant_name,
             applicant_email=db_user.applicant_email,
@@ -86,6 +88,7 @@ class UserRepository(BaseRepository):
             phone=user.phone,
             institution_type=user.institution_type,
             logo_filename=user.logo_filename,
+            logo_url=user.logo_url,
             specialty=user.specialty,
             applicant_name=user.applicant_name,
             applicant_email=user.applicant_email,

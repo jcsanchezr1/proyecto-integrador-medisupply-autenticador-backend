@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "2f6db082-949d-4f83-93ac-06bd75ec7629",
+		"_postman_id": "1b3d434a-9437-4db5-aa3b-78a44bab739c",
 		"name": "MediSupply Autenticador API",
 		"description": "Colección de endpoints para el servicio de autenticación MediSupply con automatización de pruebas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-2f6db082-949d-4f83-93ac-06bd75ec7629?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-1b3d434a-9437-4db5-aa3b-78a44bab739c?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -263,6 +263,184 @@
 					]
 				},
 				"description": "Crear un nuevo usuario con todos los campos obligatorios (incluye integración con Keycloak - rol Cliente automático)"
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Usuario con Imagen - Exitoso",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generar email aleatorio único para usuario con imagen",
+							"const timestamp = Date.now();",
+							"const randomNum = Math.floor(Math.random() * 10000);",
+							"const emailAleatorio = 'hospital_imagen_' + timestamp + '_' + randomNum + '@test.com';",
+							"pm.environment.set('email_usuario_imagen', emailAleatorio);",
+							"console.log('Email generado para usuario con imagen:', emailAleatorio);",
+							"",
+							"// Generar datos de prueba",
+							"pm.environment.set('nombre_institucion_imagen', 'Hospital con Logo');",
+							"pm.environment.set('tax_id_imagen', '12345678-9');",
+							"pm.environment.set('direccion_imagen', 'Calle 123 #45-67, Bogotá');",
+							"pm.environment.set('telefono_imagen', '3001234567');",
+							"pm.environment.set('tipo_institucion_imagen', 'Hospital');",
+							"pm.environment.set('especialidad_imagen', 'Alto valor');",
+							"pm.environment.set('nombre_solicitante_imagen', 'Dr. Juan Pérez');",
+							"pm.environment.set('email_solicitante_imagen', 'juan.perez@hospital.com');",
+							"pm.environment.set('password_imagen', 'password123');",
+							"pm.environment.set('password_confirm_imagen', 'password123');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar creación exitosa de usuario con imagen",
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has success message\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData.message).to.include('registrado exitosamente');",
+							"});",
+							"",
+							"pm.test(\"Response has user data\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('institution_name');",
+							"    pm.expect(jsonData.data).to.have.property('email');",
+							"});",
+							"",
+							"pm.test(\"User has logo fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.have.property('logo_filename');",
+							"    pm.expect(jsonData.data).to.have.property('logo_url');",
+							"    ",
+							"    // Verificar que el logo_filename no esté vacío si se subió una imagen",
+							"    if (jsonData.data.logo_filename) {",
+							"        pm.expect(jsonData.data.logo_filename).to.not.be.empty;",
+							"    }",
+							"    ",
+							"    // Verificar que el logo_url no esté vacío si se subió una imagen",
+							"    if (jsonData.data.logo_url) {",
+							"        pm.expect(jsonData.data.logo_url).to.not.be.empty;",
+							"        pm.expect(jsonData.data.logo_url).to.include('storage.googleapis.com');",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 10 seconds\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);",
+							"});",
+							"",
+							"// Guardar información del usuario creado",
+							"const jsonData = pm.response.json();",
+							"if (jsonData.data && jsonData.data.id) {",
+							"    pm.globals.set('created_user_id_imagen', jsonData.data.id);",
+							"    pm.globals.set('created_user_email_imagen', jsonData.data.email);",
+							"    console.log('Usuario con imagen creado:', jsonData.data.id);",
+							"    console.log('Email del usuario:', jsonData.data.email);",
+							"    console.log('Logo filename:', jsonData.data.logo_filename);",
+							"    console.log('Logo URL:', jsonData.data.logo_url);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "institution_name",
+							"value": "{{nombre_institucion_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "tax_id",
+							"value": "{{tax_id_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "{{email_usuario_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "address",
+							"value": "{{direccion_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "phone",
+							"value": "{{telefono_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "institution_type",
+							"value": "{{tipo_institucion_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "logo",
+							"type": "file",
+							"src": "/Users/juliosanchez/Downloads/images.jpeg"
+						},
+						{
+							"key": "specialty",
+							"value": "{{especialidad_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "applicant_name",
+							"value": "{{nombre_solicitante_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "applicant_email",
+							"value": "{{email_solicitante_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{password_imagen}}",
+							"type": "text"
+						},
+						{
+							"key": "confirm_password",
+							"value": "{{password_confirm_imagen}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/user",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"user"
+					]
+				},
+				"description": "Crear usuario con imagen usando form-data (multipart/form-data)"
 			},
 			"response": []
 		},
