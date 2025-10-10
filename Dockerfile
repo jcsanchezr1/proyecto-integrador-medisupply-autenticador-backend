@@ -12,6 +12,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código de la aplicación
 COPY . /app
 
+# Crear directorio para credenciales GCP
+RUN mkdir -p /app/credentials
+
 # Exponer puerto
 EXPOSE 8080
 
