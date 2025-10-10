@@ -36,3 +36,18 @@ class DatabaseError(Exception):
 class ServiceError(Exception):
     """Excepción base para errores de servicios"""
     pass
+
+
+class BusinessLogicError(ServiceError):
+    """Excepción para errores de lógica de negocio"""
+    pass
+
+
+class NotFoundError(ServiceError):
+    """Excepción para recursos no encontrados"""
+    pass
+
+
+class FileProcessingError(ValidationError):
+    """Excepción para errores de procesamiento de archivos"""
+    pass

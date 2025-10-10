@@ -6,6 +6,17 @@ services:
     container_name: autenticador
     build:
       context: ./
+    environment:
+      - HOST=0.0.0.0
+      - DEBUG=true
+      - DATABASE_URL=postgresql://medisupply_local_user:medisupply_local_password@medisupply-db:5432/medisupply_local_db
+      - GCP_PROJECT_ID=soluciones-cloud-2024-02
+      - BUCKET_NAME=medisupply-images-bucket
+      - BUCKET_FOLDER=users
+      - BUCKET_LOCATION=us-central1
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcp-credentials.json
+    volumes:
+      - ./credentials/gcp-credentials.json:/app/credentials/gcp-credentials.json:ro
     dns:
       - 8.8.8.8
     networks:
