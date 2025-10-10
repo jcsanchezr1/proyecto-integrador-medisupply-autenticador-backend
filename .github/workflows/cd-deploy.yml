@@ -66,6 +66,8 @@ jobs:
         
       - name: Build Docker image
         run: |
+          # Copiar credenciales al directorio de la aplicación
+          cp /tmp/gcp-credentials.json ./credentials/gcp-credentials.json
           docker build --platform=linux/amd64 \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_LATEST }} \
@@ -78,7 +80,10 @@ jobs:
           
       - name: Deploy to Cloud Run
         run: |
-          # Crear archivo temporal con las variables de entorno
+          # Crear archivo temporal con el JSON de credenciales
+          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > /tmp/gcp-credentials.json
+          
+          # Crear archivo temporal con las variables de entorno (sin el JSON problemático)
           cat > env_vars.yaml << EOF
           env_vars:
             HOST: "0.0.0.0"
@@ -91,8 +96,7 @@ jobs:
             BUCKET_NAME: "${{ env.BUCKET_NAME }}"
             BUCKET_FOLDER: "${{ env.BUCKET_FOLDER }}"
             BUCKET_LOCATION: "${{ env.BUCKET_LOCATION }}"
-            GOOGLE_APPLICATION_CREDENTIALS_JSON: |
-              ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+            GOOGLE_APPLICATION_CREDENTIALS: "/app/credentials/gcp-credentials.json"
           EOF
           
           gcloud run deploy ${{ env.SERVICE_NAME }} \
