@@ -207,5 +207,5 @@ class CloudStorageService:
             return signed_url
 
         except Exception as e:
-            logger.error(f"Error al generar URL firmada para {filename}: {str(e)}")
+            logger.error(f"Error al generar URL firmada para 2 {filename}: {str(e)}")
             return f"https://storage.googleapis.com/{self.config.BUCKET_NAME}/{self.config.BUCKET_FOLDER}/{filename}"
