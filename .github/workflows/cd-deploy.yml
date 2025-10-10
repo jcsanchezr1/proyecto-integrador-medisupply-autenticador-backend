@@ -78,11 +78,28 @@ jobs:
           
       - name: Deploy to Cloud Run
         run: |
+          # Crear archivo temporal con las variables de entorno
+          cat > env_vars.yaml << EOF
+          env_vars:
+            HOST: "0.0.0.0"
+            DEBUG: "false"
+            DATABASE_URL: "${{ env.DATABASE_URL }}"
+            KC_BASE_URL: "${{ env.KC_BASE_URL }}"
+            KC_ADMIN_USER: "${{ env.KC_ADMIN_USER }}"
+            KC_ADMIN_PASSWORD: "${{ env.KC_ADMIN_PASSWORD }}"
+            GCP_PROJECT_ID: "${{ env.GCP_PROJECT_ID }}"
+            BUCKET_NAME: "${{ env.BUCKET_NAME }}"
+            BUCKET_FOLDER: "${{ env.BUCKET_FOLDER }}"
+            BUCKET_LOCATION: "${{ env.BUCKET_LOCATION }}"
+            GOOGLE_APPLICATION_CREDENTIALS_JSON: |
+              ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+          EOF
+          
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
-            --set-env-vars HOST="0.0.0.0",DEBUG="false",DATABASE_URL="${{ env.DATABASE_URL }}",KC_BASE_URL="${{ env.KC_BASE_URL }}",KC_ADMIN_USER="${{ env.KC_ADMIN_USER }}",KC_ADMIN_PASSWORD="${{ env.KC_ADMIN_PASSWORD }}",GCP_PROJECT_ID="${{ env.GCP_PROJECT_ID }}",BUCKET_NAME="${{ env.BUCKET_NAME }}",BUCKET_FOLDER="${{ env.BUCKET_FOLDER }}",BUCKET_LOCATION="${{ env.BUCKET_LOCATION }}",GOOGLE_APPLICATION_CREDENTIALS_JSON="${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" \
+            --env-vars-file env_vars.yaml \
             --memory 2Gi \
             --cpu 2 \
             --min-instances 1 \
