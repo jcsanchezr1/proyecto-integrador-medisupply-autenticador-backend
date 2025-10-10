@@ -167,13 +167,13 @@ class CloudStorageService:
         except Exception as e:
             return False, f"Error al eliminar imagen: {str(e)}"
     
-    def get_image_url(self, filename: str, expiration_hours: int = 2160) -> str:
+    def get_image_url(self, filename: str, expiration_hours: int = 168) -> str:
         """
-        Obtiene la URL firmada de una imagen
+        Obtiene la URL firmada de una imagen usando IAM signBlob service
         
         Args:
             filename: Nombre del archivo
-            expiration_hours: Horas de validez de la URL (default: 2160 = 3 meses)
+            expiration_hours: Horas de validez de la URL (default: 168 = 7 días, máximo permitido)
             
         Returns:
             str: URL firmada de la imagen
@@ -189,14 +189,26 @@ class CloudStorageService:
                 logger.warning(f"El archivo {filename} no existe en el bucket")
                 return ""
             
-            # Generar URL firmada con expiración
+            # Generar URL firmada usando IAM signBlob service
             expiration = datetime.now(timezone.utc) + timedelta(hours=expiration_hours)
-            signed_url = blob.generate_signed_url(
-                expiration=expiration,
-                method='GET'
-            )
             
-            logger.info(f"URL firmada generada para {filename}, expira en {expiration_hours} horas")
+            if self.config.SIGNING_SERVICE_ACCOUNT_EMAIL:
+                # Usar IAM signBlob service (recomendado para Cloud Run)
+                signed_url = blob.generate_signed_url(
+                    expiration=expiration,
+                    method='GET',
+                    version='v4',
+                    service_account_email=self.config.SIGNING_SERVICE_ACCOUNT_EMAIL
+                )
+                logger.info(f"URL firmada generada usando IAM signBlob para {filename}, expira en {expiration_hours} horas")
+            else:
+                # Fallback a método tradicional (puede fallar en Cloud Run)
+                signed_url = blob.generate_signed_url(
+                    expiration=expiration,
+                    method='GET'
+                )
+                logger.info(f"URL firmada generada usando método tradicional para {filename}, expira en {expiration_hours} horas")
+            
             return signed_url
             
         except Exception as e:
