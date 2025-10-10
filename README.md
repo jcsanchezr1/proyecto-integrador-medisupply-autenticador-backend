@@ -61,6 +61,18 @@ Estructura básica preparada para escalar:
 
 2. La aplicación estará disponible en `http://localhost:8080`
 
+### Pruebas unitarias
+
+1. Correr pruebas unitarias con coverage:
+   ```bash
+   coverage run -m unittest discover -s tests
+   ```
+
+1. Ver reporte de cobertura de las pruebas unitarias
+   ```bash
+   coverage report
+   ```
+
 ## Endpoints
 
 ### Health Check
