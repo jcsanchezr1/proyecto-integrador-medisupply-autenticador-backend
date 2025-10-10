@@ -88,6 +88,7 @@ jobs:
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
+            --service-account ${{ env.SIGNING_SERVICE_ACCOUNT_EMAIL }} \
             --set-env-vars HOST="0.0.0.0",DEBUG="false",DATABASE_URL="${{ env.DATABASE_URL }}",KC_BASE_URL="${{ env.KC_BASE_URL }}",KC_ADMIN_USER="${{ env.KC_ADMIN_USER }}",KC_ADMIN_PASSWORD="${{ env.KC_ADMIN_PASSWORD }}",GCP_PROJECT_ID="${{ env.GCP_PROJECT_ID }}",BUCKET_NAME="${{ env.BUCKET_NAME }}",BUCKET_FOLDER="${{ env.BUCKET_FOLDER }}",BUCKET_LOCATION="${{ env.BUCKET_LOCATION }}",SIGNING_SERVICE_ACCOUNT_EMAIL="${{ env.SIGNING_SERVICE_ACCOUNT_EMAIL }}" \
             --memory 2Gi \
             --cpu 2 \
