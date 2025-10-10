@@ -252,16 +252,19 @@ class TestCloudStorageService(unittest.TestCase):
             self.assertIn("Error de Google Cloud Storage", message)
             self.assertIsNone(url)
     
+    @patch('google.auth.default')
     @patch('app.services.cloud_storage_service.storage.Client')
-    def test_get_image_url_success(self, mock_client_class):
+    def test_get_image_url_success(self, mock_client_class, mock_default):
         """Prueba obtener URL de imagen exitosamente"""
         # Configurar mocks
         mock_client = Mock()
         mock_bucket = Mock()
         mock_blob = Mock()
+        mock_creds = Mock()
         mock_client.bucket.return_value = mock_bucket
         mock_bucket.blob.return_value = mock_blob
         mock_client_class.return_value = mock_client
+        mock_default.return_value = (mock_creds, None)
         
         # Configurar blob
         mock_blob.exists.return_value = True
@@ -373,16 +376,19 @@ class TestCloudStorageService(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn("Error de Google Cloud Storage", message)
     
+    @patch('google.auth.default')
     @patch('app.services.cloud_storage_service.storage.Client')
-    def test_get_image_url_custom_expiration(self, mock_client_class):
+    def test_get_image_url_custom_expiration(self, mock_client_class, mock_default):
         """Prueba obtener URL con expiración personalizada"""
         # Configurar mocks
         mock_client = Mock()
         mock_bucket = Mock()
         mock_blob = Mock()
+        mock_creds = Mock()
         mock_client.bucket.return_value = mock_bucket
         mock_bucket.blob.return_value = mock_blob
         mock_client_class.return_value = mock_client
+        mock_default.return_value = (mock_creds, None)
         
         # Configurar blob
         mock_blob.exists.return_value = True

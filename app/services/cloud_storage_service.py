@@ -169,7 +169,7 @@ class CloudStorageService:
     
     def get_image_url(self, filename: str, expiration_hours: int = 168) -> str:
         """
-        Obtiene la URL firmada de una imagen usando IAM signBlob service
+        Genera una URL firmada de una imagen en Cloud Storage usando IAM signBlob (Cloud Run safe)
         
         Args:
             filename: Nombre del archivo
@@ -180,39 +180,32 @@ class CloudStorageService:
         """
         try:
             from datetime import datetime, timedelta, timezone
+            from google.auth import default
             
             full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
             blob = self.bucket.blob(full_path)
-            
-            # Verificar que el blob existe
+
             if not blob.exists():
                 logger.warning(f"El archivo {filename} no existe en el bucket")
                 return ""
-            
-            # Generar URL firmada usando IAM signBlob service
+
             expiration = datetime.now(timezone.utc) + timedelta(hours=expiration_hours)
-            
-            if self.config.SIGNING_SERVICE_ACCOUNT_EMAIL:
-                # Usar IAM signBlob service (recomendado para Cloud Run)
-                signed_url = blob.generate_signed_url(
-                    expiration=expiration,
-                    method='GET',
-                    version='v4',
-                    service_account_email=self.config.SIGNING_SERVICE_ACCOUNT_EMAIL
-                )
-                logger.info(f"URL firmada generada usando IAM signBlob para {filename}, expira en {expiration_hours} horas")
-            else:
-                # Fallback a método tradicional (puede fallar en Cloud Run)
-                signed_url = blob.generate_signed_url(
-                    expiration=expiration,
-                    method='GET'
-                )
-                logger.info(f"URL firmada generada usando método tradicional para {filename}, expira en {expiration_hours} horas")
-            
+
+            # Usa las credenciales por defecto (Cloud Run SA)
+            creds, _ = default()
+            logger.info(f"Credenciales obtenidas: {type(creds).__name__} - Service Account: {getattr(creds, 'service_account_email', 'N/A')}")
+
+            signed_url = blob.generate_signed_url(
+                expiration=expiration,
+                method="GET",
+                version="v4",
+                service_account_email=self.config.SIGNING_SERVICE_ACCOUNT_EMAIL,
+                credentials=creds,  # fuerza el uso de las credenciales activas
+            )
+
+            logger.info(f"URL firmada generada para {filename}, expira en {expiration_hours}h")
             return signed_url
-            
+
         except Exception as e:
             logger.error(f"Error al generar URL firmada para {filename}: {str(e)}")
-            # Fallback a URL directa si hay error
-            full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
-            return f"https://storage.googleapis.com/{self.config.BUCKET_NAME}/{full_path}"
+            return f"https://storage.googleapis.com/{self.config.BUCKET_NAME}/{self.config.BUCKET_FOLDER}/{filename}"
