@@ -121,9 +121,3 @@ Para desplegar en Google Cloud Run:
 - `HOST`: Host del servicio (default: 0.0.0.0)
 - `DEBUG`: Modo debug (default: True)
 
-## Próximos Pasos
-
-1. Implementar autenticación 
-2. Agregar base de datos
-3. Implementar endpoints de creaciòn de usuarios
-4. Agregar validaciones en e proyecto 4.
