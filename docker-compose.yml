@@ -15,6 +15,8 @@ services:
       - BUCKET_FOLDER=users
       - BUCKET_LOCATION=us-central1
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcp-credentials.json
+      # Configuración para URLs firmadas con IAM signBlob
+      - SIGNING_SERVICE_ACCOUNT_EMAIL=medisupply-signing@clean-result-473723-t3.iam.gserviceaccount.com
     volumes:
       - ./credentials/gcp-credentials.json:/app/credentials/gcp-credentials.json:ro
     dns:
