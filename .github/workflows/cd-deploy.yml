@@ -1,15 +1,10 @@
 name: CD MediSupply Authenticator Deploy
 
-#on:
-#  workflow_run:
-#    workflows: ["CI MediSupply Authenticator Release"]
-#    types:
-#      - completed
-
 on:
-    push:
-      branches:
-        - main
+  workflow_run:
+    workflows: ["CI MediSupply Authenticator Release"]
+    types:
+      - completed
 
 env:
   # Configuración del proyecto GCP (usando variables de GitHub Actions)
@@ -38,7 +33,7 @@ jobs:
     name: Build and Deploy to Cloud Run
     runs-on: ubuntu-latest
     # Solo ejecuta si el workflow de Release terminó exitoso
-    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     steps:
       - name: Checkout code

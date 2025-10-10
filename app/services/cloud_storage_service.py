@@ -189,13 +189,11 @@ class CloudStorageService:
                 logger.warning(f"El archivo {filename} no existe en el bucket")
                 return ""
 
-            logger.info("Log 1")
             expiration = datetime.now(timezone.utc) + timedelta(hours=expiration_hours)
 
             # Cargar credenciales actuales (las del Cloud Run service account)
             source_credentials, _ = default()
 
-            logger.info("Log 2")
             # Impersonar el service account que firmará la URL
             target_credentials = impersonated_credentials.Credentials(
                 source_credentials=source_credentials,
@@ -204,7 +202,6 @@ class CloudStorageService:
                 lifetime=300,
             )
 
-            logger.info("Log 3")
             # Generar la URL firmada usando las credenciales impersonadas
             signed_url = blob.generate_signed_url(
                 expiration=expiration,
