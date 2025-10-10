@@ -1,10 +1,15 @@
 name: CD MediSupply Authenticator Deploy
 
+#on:
+#  workflow_run:
+#    workflows: ["CI MediSupply Authenticator Release"]
+#    types:
+#      - completed
+
 on:
-  workflow_run:
-    workflows: ["CI MediSupply Authenticator Release"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 env:
   # Configuración del proyecto GCP (usando variables de GitHub Actions)
