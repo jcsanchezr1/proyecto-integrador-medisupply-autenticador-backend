@@ -37,6 +37,9 @@ class Config:
     BUCKET_FOLDER = os.getenv('BUCKET_FOLDER', 'users')
     BUCKET_LOCATION = os.getenv('BUCKET_LOCATION', 'us-central1')
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '')
+    
+    # Configuración para URLs firmadas con IAM signBlob
+    SIGNING_SERVICE_ACCOUNT_EMAIL = os.getenv('SIGNING_SERVICE_ACCOUNT_EMAIL', '')
 
 
 class DevelopmentConfig(Config):
