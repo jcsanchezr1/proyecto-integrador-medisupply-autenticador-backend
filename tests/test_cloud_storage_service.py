@@ -252,19 +252,22 @@ class TestCloudStorageService(unittest.TestCase):
             self.assertIn("Error de Google Cloud Storage", message)
             self.assertIsNone(url)
     
+    @patch('google.auth.impersonated_credentials.Credentials')
     @patch('google.auth.default')
     @patch('app.services.cloud_storage_service.storage.Client')
-    def test_get_image_url_success(self, mock_client_class, mock_default):
+    def test_get_image_url_success(self, mock_client_class, mock_default, mock_impersonated_creds):
         """Prueba obtener URL de imagen exitosamente"""
         # Configurar mocks
         mock_client = Mock()
         mock_bucket = Mock()
         mock_blob = Mock()
-        mock_creds = Mock()
+        mock_source_creds = Mock()
+        mock_target_creds = Mock()
         mock_client.bucket.return_value = mock_bucket
         mock_bucket.blob.return_value = mock_blob
         mock_client_class.return_value = mock_client
-        mock_default.return_value = (mock_creds, None)
+        mock_default.return_value = (mock_source_creds, None)
+        mock_impersonated_creds.return_value = mock_target_creds
         
         # Configurar blob
         mock_blob.exists.return_value = True
@@ -275,6 +278,7 @@ class TestCloudStorageService(unittest.TestCase):
         self.assertEqual(url, 'https://storage.googleapis.com/bucket/test.jpg?signed')
         mock_blob.exists.assert_called_once()
         mock_blob.generate_signed_url.assert_called_once()
+        mock_impersonated_creds.assert_called_once()
     
     @patch('app.services.cloud_storage_service.storage.Client')
     def test_get_image_url_file_not_exists(self, mock_client_class):
@@ -376,19 +380,22 @@ class TestCloudStorageService(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn("Error de Google Cloud Storage", message)
     
+    @patch('google.auth.impersonated_credentials.Credentials')
     @patch('google.auth.default')
     @patch('app.services.cloud_storage_service.storage.Client')
-    def test_get_image_url_custom_expiration(self, mock_client_class, mock_default):
+    def test_get_image_url_custom_expiration(self, mock_client_class, mock_default, mock_impersonated_creds):
         """Prueba obtener URL con expiración personalizada"""
         # Configurar mocks
         mock_client = Mock()
         mock_bucket = Mock()
         mock_blob = Mock()
-        mock_creds = Mock()
+        mock_source_creds = Mock()
+        mock_target_creds = Mock()
         mock_client.bucket.return_value = mock_bucket
         mock_bucket.blob.return_value = mock_blob
         mock_client_class.return_value = mock_client
-        mock_default.return_value = (mock_creds, None)
+        mock_default.return_value = (mock_source_creds, None)
+        mock_impersonated_creds.return_value = mock_target_creds
         
         # Configurar blob
         mock_blob.exists.return_value = True
@@ -398,6 +405,7 @@ class TestCloudStorageService(unittest.TestCase):
         
         self.assertEqual(url, 'https://storage.googleapis.com/bucket/test.jpg?signed')
         mock_blob.generate_signed_url.assert_called_once()
+        mock_impersonated_creds.assert_called_once()
         
         # Verificar que se pasó la expiración correcta
         call_args = mock_blob.generate_signed_url.call_args

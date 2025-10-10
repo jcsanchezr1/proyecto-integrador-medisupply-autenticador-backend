@@ -169,7 +169,7 @@ class CloudStorageService:
     
     def get_image_url(self, filename: str, expiration_hours: int = 168) -> str:
         """
-        Genera una URL firmada de una imagen en Cloud Storage usando IAM signBlob (Cloud Run safe)
+        Genera una URL firmada de una imagen en Cloud Storage usando impersonated credentials (Cloud Run safe)
         
         Args:
             filename: Nombre del archivo
@@ -180,7 +180,7 @@ class CloudStorageService:
         """
         try:
             from datetime import datetime, timedelta, timezone
-            from google.auth import default
+            from google.auth import default, impersonated_credentials
             
             full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
             blob = self.bucket.blob(full_path)
@@ -189,23 +189,33 @@ class CloudStorageService:
                 logger.warning(f"El archivo {filename} no existe en el bucket")
                 return ""
 
+            logger.info("Log 1")
             expiration = datetime.now(timezone.utc) + timedelta(hours=expiration_hours)
 
-            # Usa las credenciales por defecto (Cloud Run SA)
-            creds, _ = default()
-            logger.info(f"Credenciales obtenidas: {type(creds).__name__} - Service Account: {getattr(creds, 'service_account_email', 'N/A')}")
+            # Cargar credenciales actuales (las del Cloud Run service account)
+            source_credentials, _ = default()
 
+            logger.info("Log 2")
+            # Impersonar el service account que firmará la URL
+            target_credentials = impersonated_credentials.Credentials(
+                source_credentials=source_credentials,
+                target_principal=self.config.SIGNING_SERVICE_ACCOUNT_EMAIL,
+                target_scopes=["https://www.googleapis.com/auth/devstorage.read_only"],
+                lifetime=300,
+            )
+
+            logger.info("Log 3")
+            # Generar la URL firmada usando las credenciales impersonadas
             signed_url = blob.generate_signed_url(
                 expiration=expiration,
                 method="GET",
                 version="v4",
-                service_account_email=self.config.SIGNING_SERVICE_ACCOUNT_EMAIL,
-                credentials=creds,  # fuerza el uso de las credenciales activas
+                credentials=target_credentials,
             )
 
-            logger.info(f"URL firmada generada para {filename}, expira en {expiration_hours}h")
+            logger.info(f"URL firmada generada para {filename}")
             return signed_url
 
         except Exception as e:
-            logger.error(f"Error al generar URL firmada para 2 {filename}: {str(e)}")
+            logger.error(f"Error al generar URL firmada para {filename}: {e}")
             return f"https://storage.googleapis.com/{self.config.BUCKET_NAME}/{self.config.BUCKET_FOLDER}/{filename}"
