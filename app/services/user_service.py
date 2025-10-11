@@ -193,7 +193,8 @@ class UserService(BaseService):
                     'name': user.name,
                     'email': user.email,
                     'institution_type': user.institution_type,
-                    'phone': user.phone
+                    'phone': user.phone,
+                    'role': self.keycloak_client.get_user_role(user.email)
                 }
                 for user in users
             ]
