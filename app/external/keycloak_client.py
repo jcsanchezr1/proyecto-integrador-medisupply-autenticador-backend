@@ -188,6 +188,50 @@ class KeycloakClient:
         """Retorna la lista de roles disponibles en Keycloak"""
         return ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
     
+    def get_user_role(self, email: str) -> str:
+        """Obtiene el rol de un usuario por email"""
+        try:
+            token = self._get_admin_token()
+
+            search_url = f"{self.base_url}/admin/realms/{self.realm}/users"
+            headers = {
+                'Authorization': f'Bearer {token}'
+            }
+            params = {
+                'email': email,
+                'exact': 'true'
+            }
+            
+            response = requests.get(search_url, headers=headers, params=params, timeout=30)
+            response.raise_for_status()
+            
+            users = response.json()
+            if not users:
+                return "Cliente"
+            
+            user_id = users[0]['id']
+
+            roles_url = f"{self.base_url}/admin/realms/{self.realm}/users/{user_id}/role-mappings/realm"
+            roles_response = requests.get(roles_url, headers=headers, timeout=30)
+            roles_response.raise_for_status()
+            
+            roles = roles_response.json()
+            if roles:
+                # Filtrar roles específicos de la aplicación, ignorando el rol por defecto
+                app_roles = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+                for role in roles:
+                    if role['name'] in app_roles:
+                        return role['name']
+
+                return roles[0]['name']
+            
+            return "Cliente"
+            
+        except requests.exceptions.RequestException as e:
+            return "Cliente"
+        except Exception as e:
+            return "Cliente"
+    
     def authenticate_user(self, username: str, password: str) -> Dict[str, Any]:
         """Autentica un usuario con Keycloak y retorna el token"""
         try:
