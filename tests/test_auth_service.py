@@ -30,6 +30,8 @@ class TestAuthService(unittest.TestCase):
         
         # Mock del usuario en la base de datos
         mock_user = Mock(spec=User)
+        mock_user.email = "test@example.com"
+        mock_user.name = "Test User"
         self.mock_user_repository.get_by_email.return_value = mock_user
         
         # Mock de respuesta exitosa de Keycloak
@@ -44,14 +46,22 @@ class TestAuthService(unittest.TestCase):
             "scope": "email profile"
         }
         self.mock_keycloak_client.authenticate_user.return_value = keycloak_response
+        self.mock_keycloak_client.get_user_role.return_value = "Administrador"
         
         # Ejecutar el método
         result = self.auth_service.authenticate_user(user_email, password)
         
         # Verificaciones
-        self.assertEqual(result, keycloak_response)
+        expected_response = keycloak_response.copy()
+        expected_response.update({
+            'email': 'test@example.com',
+            'name': 'Test User',
+            'role': 'Administrador'
+        })
+        self.assertEqual(result, expected_response)
         self.mock_user_repository.get_by_email.assert_called_once_with(user_email)
         self.mock_keycloak_client.authenticate_user.assert_called_once_with(user_email, password)
+        self.mock_keycloak_client.get_user_role.assert_called_once_with(user_email)
     
     def test_authenticate_user_not_found(self):
         """Test cuando el usuario no existe en la base de datos"""
@@ -90,6 +100,48 @@ class TestAuthService(unittest.TestCase):
             self.auth_service.authenticate_user(user_email, password)
         
         self.assertEqual(context.exception.args[0], keycloak_error)
+    
+    def test_authenticate_user_role_error_fallback(self):
+        """Test cuando hay error obteniendo el rol del usuario, debe usar 'Cliente' por defecto"""
+        # Datos de prueba
+        user_email = "test@example.com"
+        password = "password123"
+        
+        # Mock del usuario en la base de datos
+        mock_user = Mock(spec=User)
+        mock_user.email = "test@example.com"
+        mock_user.name = "Test User"
+        self.mock_user_repository.get_by_email.return_value = mock_user
+        
+        # Mock de respuesta exitosa de Keycloak
+        keycloak_response = {
+            "access_token": "AccessToken",
+            "expires_in": 300,
+            "refresh_expires_in": 1800,
+            "refresh_token": "RefreshToken",
+            "token_type": "Bearer",
+            "not-before-policy": 0,
+            "session_state": "2ea068ec-21b1-4ba7-ab64-44cc50d3080f",
+            "scope": "email profile"
+        }
+        self.mock_keycloak_client.authenticate_user.return_value = keycloak_response
+        # Simular error al obtener el rol
+        self.mock_keycloak_client.get_user_role.side_effect = Exception("Error de conexión")
+        
+        # Ejecutar el método
+        result = self.auth_service.authenticate_user(user_email, password)
+        
+        # Verificaciones
+        expected_response = keycloak_response.copy()
+        expected_response.update({
+            'email': 'test@example.com',
+            'name': 'Test User',
+            'role': 'Cliente'  # Debe usar 'Cliente' por defecto cuando hay error
+        })
+        self.assertEqual(result, expected_response)
+        self.mock_user_repository.get_by_email.assert_called_once_with(user_email)
+        self.mock_keycloak_client.authenticate_user.assert_called_once_with(user_email, password)
+        self.mock_keycloak_client.get_user_role.assert_called_once_with(user_email)
     
     def test_authenticate_user_empty_user(self):
         """Test con campo user vacío"""
