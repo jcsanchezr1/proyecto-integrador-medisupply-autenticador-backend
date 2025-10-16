@@ -1296,7 +1296,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"user\": \"medisupply05@gmail.com\",\n    \"password\": \"admin\"\n}"
+					"raw": "{\n    \"user\": \"medisupply05@gmail.com\",\n    \"password\": \"Admin123456\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/token",
