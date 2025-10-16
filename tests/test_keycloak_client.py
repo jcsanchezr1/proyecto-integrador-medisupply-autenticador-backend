@@ -404,6 +404,290 @@ class TestKeycloakClient(unittest.TestCase):
         
         self.assertIn("Error al cerrar sesión con Keycloak", str(context.exception))
         self.assertIn("Request timeout", str(context.exception))
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_user_role_success(self, mock_get, mock_get_token):
+        """Prueba obtener rol de usuario exitosamente"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para búsqueda de usuario
+        mock_search_response = Mock()
+        mock_search_response.json.return_value = [{'id': 'user-123'}]
+        mock_search_response.raise_for_status.return_value = None
+        
+        # Mock para obtener roles
+        mock_roles_response = Mock()
+        mock_roles_response.json.return_value = [{'name': 'Administrador'}]
+        mock_roles_response.raise_for_status.return_value = None
+        
+        # Configurar side_effect para diferentes llamadas
+        mock_get.side_effect = [mock_search_response, mock_roles_response]
+        
+        # Ejecutar
+        role = self.client.get_user_role('test@example.com')
+        
+        # Verificar
+        self.assertEqual(role, 'Administrador')
+        self.assertEqual(mock_get.call_count, 2)
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_user_role_user_not_found(self, mock_get, mock_get_token):
+        """Prueba obtener rol cuando usuario no existe"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para búsqueda de usuario - usuario no encontrado
+        mock_search_response = Mock()
+        mock_search_response.json.return_value = []  # Lista vacía
+        mock_search_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_search_response
+        
+        # Ejecutar
+        role = self.client.get_user_role('nonexistent@example.com')
+        
+        # Verificar - debe retornar "Cliente" por defecto
+        self.assertEqual(role, 'Cliente')
+        mock_get.assert_called_once()  # Solo una llamada (búsqueda de usuario)
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_user_role_no_roles(self, mock_get, mock_get_token):
+        """Prueba obtener rol cuando usuario no tiene roles asignados"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para búsqueda de usuario
+        mock_search_response = Mock()
+        mock_search_response.json.return_value = [{'id': 'user-123'}]
+        mock_search_response.raise_for_status.return_value = None
+        
+        # Mock para obtener roles - sin roles
+        mock_roles_response = Mock()
+        mock_roles_response.json.return_value = []  # Sin roles
+        mock_roles_response.raise_for_status.return_value = None
+        
+        # Configurar side_effect para diferentes llamadas
+        mock_get.side_effect = [mock_search_response, mock_roles_response]
+        
+        # Ejecutar
+        role = self.client.get_user_role('test@example.com')
+        
+        # Verificar - debe retornar "Cliente" por defecto
+        self.assertEqual(role, 'Cliente')
+        self.assertEqual(mock_get.call_count, 2)
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_user_role_app_role_priority(self, mock_get, mock_get_token):
+        """Prueba que se prioricen roles de aplicación específicos"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para búsqueda de usuario
+        mock_search_response = Mock()
+        mock_search_response.json.return_value = [{'id': 'user-123'}]
+        mock_search_response.raise_for_status.return_value = None
+        
+        # Mock para obtener roles - múltiples roles incluyendo uno de aplicación
+        mock_roles_response = Mock()
+        mock_roles_response.json.return_value = [
+            {'name': 'default-role'},  # Rol por defecto
+            {'name': 'Administrador'}  # Rol de aplicación
+        ]
+        mock_roles_response.raise_for_status.return_value = None
+        
+        # Configurar side_effect para diferentes llamadas
+        mock_get.side_effect = [mock_search_response, mock_roles_response]
+        
+        # Ejecutar
+        role = self.client.get_user_role('test@example.com')
+        
+        # Verificar - debe retornar el rol de aplicación
+        self.assertEqual(role, 'Administrador')
+        self.assertEqual(mock_get.call_count, 2)
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_user_role_request_exception(self, mock_get, mock_get_token):
+        """Prueba obtener rol con excepción en petición"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        mock_get.side_effect = Exception("Connection error")
+        
+        # Ejecutar
+        role = self.client.get_user_role('test@example.com')
+        
+        # Verificar - debe retornar "Cliente" por defecto en caso de error
+        self.assertEqual(role, 'Cliente')
+        mock_get_token.assert_called_once()
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_authenticate_user_success(self, mock_post):
+        """Prueba autenticación exitosa"""
+        # Configurar mock de respuesta exitosa
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'access_token': 'test-access-token',
+            'refresh_token': 'test-refresh-token',
+            'expires_in': 3600,
+            'token_type': 'Bearer'
+        }
+        mock_post.return_value = mock_response
+        
+        # Ejecutar autenticación
+        result = self.client.authenticate_user('test@example.com', 'password123')
+        
+        # Verificaciones
+        self.assertEqual(result['access_token'], 'test-access-token')
+        self.assertEqual(result['refresh_token'], 'test-refresh-token')
+        self.assertEqual(result['expires_in'], 3600)
+        self.assertEqual(result['token_type'], 'Bearer')
+        mock_post.assert_called_once()
+        
+        # Verificar URL y datos enviados
+        call_args = mock_post.call_args
+        self.assertIn("/protocol/openid-connect/token", call_args[0][0])
+        self.assertEqual(call_args[1]['data']['grant_type'], 'password')
+        self.assertEqual(call_args[1]['data']['client_id'], 'medisupply-app')
+        self.assertEqual(call_args[1]['data']['username'], 'test@example.com')
+        self.assertEqual(call_args[1]['data']['password'], 'password123')
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_authenticate_user_keycloak_error(self, mock_post):
+        """Prueba autenticación con error de Keycloak"""
+        # Configurar mock de error de Keycloak
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_response.json.return_value = {
+            'error': 'invalid_grant',
+            'error_description': 'Invalid user credentials'
+        }
+        mock_post.return_value = mock_response
+        
+        # Ejecutar autenticación
+        result = self.client.authenticate_user('test@example.com', 'wrongpassword')
+        
+        # Verificaciones
+        self.assertEqual(result['error'], 'invalid_grant')
+        self.assertEqual(result['error_description'], 'Invalid user credentials')
+        mock_post.assert_called_once()
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_authenticate_user_keycloak_error_no_standard_format(self, mock_post):
+        """Prueba autenticación con error de Keycloak sin formato estándar"""
+        # Configurar mock de error de Keycloak sin formato estándar
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.json.return_value = {
+            'message': 'User not found'
+        }
+        mock_post.return_value = mock_response
+        
+        # Ejecutar autenticación
+        result = self.client.authenticate_user('test@example.com', 'password123')
+        
+        # Verificaciones - Keycloak retorna el JSON directamente cuando hay error
+        self.assertEqual(result['message'], 'User not found')
+        mock_post.assert_called_once()
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_authenticate_user_json_parse_error(self, mock_post):
+        """Prueba autenticación con error de parsing JSON"""
+        # Configurar mock de respuesta con JSON inválido
+        mock_response = Mock()
+        mock_response.status_code = 500
+        mock_response.json.side_effect = ValueError("Invalid JSON")
+        mock_response.text = "Internal Server Error"
+        mock_post.return_value = mock_response
+        
+        # Ejecutar autenticación
+        result = self.client.authenticate_user('test@example.com', 'password123')
+        
+        # Verificaciones
+        self.assertEqual(result['error'], 'authentication_failed')
+        self.assertEqual(result['error_description'], 'Error de autenticación')
+        mock_post.assert_called_once()
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_authenticate_user_request_exception(self, mock_post):
+        """Prueba autenticación con excepción de requests"""
+        # Configurar mock para lanzar excepción
+        mock_post.side_effect = Exception("Connection error")
+        
+        # Ejecutar autenticación y verificar excepción
+        with self.assertRaises(BusinessLogicError) as context:
+            self.client.authenticate_user('test@example.com', 'password123')
+        
+        self.assertIn("Error inesperado al autenticar con Keycloak", str(context.exception))
+        self.assertIn("Connection error", str(context.exception))
+    
+    @patch('app.external.keycloak_client.requests.post')
+    def test_authenticate_user_timeout(self, mock_post):
+        """Prueba autenticación con timeout"""
+        # Configurar mock para lanzar excepción de timeout
+        import requests
+        mock_post.side_effect = requests.exceptions.Timeout("Request timeout")
+        
+        # Ejecutar autenticación y verificar excepción
+        with self.assertRaises(BusinessLogicError) as context:
+            self.client.authenticate_user('test@example.com', 'password123')
+        
+        self.assertIn("Error al autenticar con Keycloak", str(context.exception))
+        self.assertIn("Request timeout", str(context.exception))
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_user_role_http_error(self, mock_get, mock_get_token):
+        """Prueba obtener rol con error HTTP"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para búsqueda de usuario con error HTTP
+        mock_search_response = Mock()
+        mock_search_response.raise_for_status.side_effect = Exception("HTTP 404")
+        mock_get.return_value = mock_search_response
+        
+        # Ejecutar
+        role = self.client.get_user_role('test@example.com')
+        
+        # Verificar - debe retornar "Cliente" por defecto en caso de error
+        self.assertEqual(role, 'Cliente')
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_user_role_roles_http_error(self, mock_get, mock_get_token):
+        """Prueba obtener rol con error HTTP al obtener roles"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para búsqueda de usuario exitosa
+        mock_search_response = Mock()
+        mock_search_response.json.return_value = [{'id': 'user-123'}]
+        mock_search_response.raise_for_status.return_value = None
+        
+        # Mock para obtener roles con error HTTP
+        mock_roles_response = Mock()
+        mock_roles_response.raise_for_status.side_effect = Exception("HTTP 403")
+        
+        # Configurar side_effect para diferentes llamadas
+        mock_get.side_effect = [mock_search_response, mock_roles_response]
+        
+        # Ejecutar
+        role = self.client.get_user_role('test@example.com')
+        
+        # Verificar - debe retornar "Cliente" por defecto en caso de error
+        self.assertEqual(role, 'Cliente')
+        self.assertEqual(mock_get.call_count, 2)
+        mock_get_token.assert_called_once()
 
 
 if __name__ == '__main__':

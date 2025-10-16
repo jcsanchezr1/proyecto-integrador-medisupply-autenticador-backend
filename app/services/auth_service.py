@@ -24,7 +24,7 @@ class AuthService:
             password: Contraseña del usuario
             
         Returns:
-            Dict con la respuesta de Keycloak o error
+            Dict con la respuesta de Keycloak más información adicional del usuario
             
         Raises:
             ValidationError: Si los datos de entrada son inválidos
@@ -49,11 +49,29 @@ class AuthService:
         if 'error' in auth_result:
             raise BusinessLogicError(auth_result)
         
+        # Obtener el rol del usuario desde Keycloak
+        try:
+            user_role = self.keycloak_client.get_user_role(user_email)
+        except Exception:
+            # Si hay error obteniendo el rol, usar "Cliente" por defecto
+            user_role = "Cliente"
+        
         # Crear modelo de respuesta y validar
         try:
             auth_response = AuthResponse(**auth_result)
             auth_response.validate()
-            return auth_response.to_dict()
+            
+            # Obtener el diccionario base de la respuesta
+            response_dict = auth_response.to_dict()
+            
+            # Agregar información adicional del usuario
+            response_dict.update({
+                'email': user.email,
+                'name': user.name,
+                'role': user_role
+            })
+            
+            return response_dict
         except ValueError as e:
             raise BusinessLogicError(f"Error en la respuesta de autenticación: {str(e)}")
     
