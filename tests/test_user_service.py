@@ -67,6 +67,8 @@ class TestUserService(unittest.TestCase):
             specialty='Alto valor',
             applicant_name='John Doe',
             applicant_email='john@hospital.com',
+            latitude=4.711,
+            longitude=-74.0721,
             password='password123',
             confirm_password='password123'
         )
@@ -418,6 +420,8 @@ class TestUserService(unittest.TestCase):
             specialty='Alto valor',
             applicant_name='John Doe',
             applicant_email='john@hospital.com',
+            latitude=4.711,
+            longitude=-74.0721,
             password='password123',
             confirm_password='password123'
         )
@@ -449,6 +453,8 @@ class TestUserService(unittest.TestCase):
                 specialty='Alto valor',
                 applicant_name='John Doe',
                 applicant_email='john@hospital.com',
+                latitude=4.711,
+                longitude=-74.0721,
                 password='password123',
                 confirm_password='password123'
             )
@@ -478,6 +484,8 @@ class TestUserService(unittest.TestCase):
             specialty='Alto valor',
             applicant_name='John Doe',
             applicant_email='john@hospital.com',
+            latitude=4.711,
+            longitude=-74.0721,
             password='password123',
             confirm_password='password123'
         )
@@ -574,6 +582,8 @@ class TestUserService(unittest.TestCase):
             specialty='Alto valor',
             applicant_name='John Doe',
             applicant_email='john@hospital.com',
+            latitude=4.711,
+            longitude=-74.0721,
             password='password123',
             confirm_password='password123'
         )

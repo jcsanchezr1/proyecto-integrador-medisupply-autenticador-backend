@@ -56,6 +56,8 @@ class TestUserRepository(unittest.TestCase):
         db_user.specialty = 'Alto valor'
         db_user.applicant_name = 'John Doe'
         db_user.applicant_email = 'john@hospital.com'
+        db_user.latitude = 4.711
+        db_user.longitude = -74.0721
         db_user.enabled = False
         db_user.created_at = datetime.now()
         db_user.updated_at = datetime.now()
@@ -68,6 +70,8 @@ class TestUserRepository(unittest.TestCase):
         self.assertEqual(user.id, '123')
         self.assertEqual(user.name, 'Test Hospital')
         self.assertEqual(user.email, 'test@hospital.com')
+        self.assertEqual(user.latitude, 4.711)
+        self.assertEqual(user.longitude, -74.0721)
     
     def test_model_to_db_conversion(self):
         """Prueba conversión de modelo de dominio a modelo de DB"""
@@ -84,6 +88,8 @@ class TestUserRepository(unittest.TestCase):
             specialty='Alto valor',
             applicant_name='John Doe',
             applicant_email='john@hospital.com',
+            latitude=4.711,
+            longitude=-74.0721,
             enabled=False,
             created_at=datetime.now(),
             updated_at=datetime.now()
@@ -97,6 +103,8 @@ class TestUserRepository(unittest.TestCase):
         self.assertEqual(db_user.id, '123')
         self.assertEqual(db_user.name, 'Test Hospital')
         self.assertEqual(db_user.email, 'test@hospital.com')
+        self.assertEqual(db_user.latitude, 4.711)
+        self.assertEqual(db_user.longitude, -74.0721)
     
     @patch('app.repositories.user_repository.UserRepository._get_session')
     def test_create_success(self, mock_get_session):
@@ -130,6 +138,8 @@ class TestUserRepository(unittest.TestCase):
                 specialty='Alto valor',
                 applicant_name='John Doe',
                 applicant_email='john@hospital.com',
+                latitude=4.711,
+                longitude=-74.0721,
                 password='password123',
                 confirm_password='password123',
                 role='Cliente'
@@ -165,6 +175,8 @@ class TestUserRepository(unittest.TestCase):
                 specialty='Alto valor',
                 applicant_name='John Doe',
                 applicant_email='john@hospital.com',
+                latitude=4.711,
+                longitude=-74.0721,
                 password='password123',
                 confirm_password='password123',
                 role='Cliente'
@@ -202,6 +214,8 @@ class TestUserRepository(unittest.TestCase):
                     specialty='Alto valor',
                     applicant_name='John Doe',
                     applicant_email='john@hospital.com',
+                    latitude=4.711,
+                    longitude=-74.0721,
                     password='password123',
                     confirm_password='password123',
                     role='Cliente'

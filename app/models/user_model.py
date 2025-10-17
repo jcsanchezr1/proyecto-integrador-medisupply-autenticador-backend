@@ -25,6 +25,8 @@ class User(BaseModel):
         self.specialty = kwargs.get('specialty', '')
         self.applicant_name = kwargs.get('applicant_name', '')
         self.applicant_email = kwargs.get('applicant_email', '')
+        self.latitude = kwargs.get('latitude', None)
+        self.longitude = kwargs.get('longitude', None)
         self.password = kwargs.get('password', '')
         self.confirm_password = kwargs.get('confirm_password', '')
         self.role = kwargs.get('role', '')
@@ -48,6 +50,8 @@ class User(BaseModel):
             'specialty': self.specialty,
             'applicant_name': self.applicant_name,
             'applicant_email': self.applicant_email,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
             'enabled': self.enabled,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
@@ -120,6 +124,24 @@ class User(BaseModel):
             errors.append("El campo 'Email del solicitante' no puede exceder 100 caracteres")
         elif not self._is_valid_email(self.applicant_email.strip()):
             errors.append("El campo 'Email del solicitante' debe tener un formato válido")
+        
+        # Validar latitud (obligatorio, número decimal o entero)
+        if self.latitude is None:
+            errors.append("El campo 'Latitud' es obligatorio")
+        else:
+            try:
+                float(self.latitude)
+            except (ValueError, TypeError):
+                errors.append("El campo 'Latitud' debe ser un número válido")
+        
+        # Validar longitud (obligatorio, número decimal o entero)
+        if self.longitude is None:
+            errors.append("El campo 'Longitud' es obligatorio")
+        else:
+            try:
+                float(self.longitude)
+            except (ValueError, TypeError):
+                errors.append("El campo 'Longitud' debe ser un número válido")
         
         # Validar contraseña (obligatorio)
         if not self.password or not self.password.strip():
