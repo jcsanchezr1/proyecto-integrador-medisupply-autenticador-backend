@@ -467,6 +467,140 @@ class TestUserRepository(unittest.TestCase):
         self.assertEqual(result, 3)
         mock_session.commit.assert_called_once()
         mock_query.delete.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_get_all_with_email_filter(self, mock_get_session):
+        """Prueba obtener usuarios con filtro de email"""
+        # Configurar mock de sesión
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar mock de query con encadenamiento
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [Mock()]
+        
+        # Mock del método _db_to_model
+        with patch.object(self.repository, '_db_to_model', return_value=User(id='123', email='test@hospital.com')):
+            
+            # Ejecutar
+            result = self.repository.get_all(limit=10, offset=0, email='test')
+            
+            # Verificar
+            self.assertIsInstance(result, list)
+            self.assertEqual(len(result), 1)
+            mock_query.filter.assert_called()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_get_all_with_name_filter(self, mock_get_session):
+        """Prueba obtener usuarios con filtro de nombre"""
+        # Configurar mock de sesión
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar mock de query con encadenamiento
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [Mock()]
+        
+        # Mock del método _db_to_model
+        with patch.object(self.repository, '_db_to_model', return_value=User(id='123', name='Hospital Test')):
+            
+            # Ejecutar
+            result = self.repository.get_all(limit=10, offset=0, name='Hospital')
+            
+            # Verificar
+            self.assertIsInstance(result, list)
+            self.assertEqual(len(result), 1)
+            mock_query.filter.assert_called()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_get_all_with_email_and_name_filters(self, mock_get_session):
+        """Prueba obtener usuarios con filtros de email y nombre"""
+        # Configurar mock de sesión
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar mock de query con encadenamiento
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [Mock()]
+        
+        # Mock del método _db_to_model
+        with patch.object(self.repository, '_db_to_model', return_value=User(id='123', name='Hospital Test', email='test@hospital.com')):
+            
+            # Ejecutar
+            result = self.repository.get_all(limit=10, offset=0, email='test', name='Hospital')
+            
+            # Verificar
+            self.assertIsInstance(result, list)
+            self.assertEqual(len(result), 1)
+            # Verificar que se llamó filter dos veces (una para email, otra para name)
+            self.assertEqual(mock_query.filter.call_count, 2)
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_count_all_with_email_filter(self, mock_get_session):
+        """Prueba contar usuarios con filtro de email"""
+        # Configurar mock de sesión
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar mock de query
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.count.return_value = 3
+        
+        # Ejecutar
+        result = self.repository.count_all(email='test')
+        
+        # Verificar
+        self.assertEqual(result, 3)
+        mock_query.filter.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_count_all_with_name_filter(self, mock_get_session):
+        """Prueba contar usuarios con filtro de nombre"""
+        # Configurar mock de sesión
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar mock de query
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.count.return_value = 2
+        
+        # Ejecutar
+        result = self.repository.count_all(name='Hospital')
+        
+        # Verificar
+        self.assertEqual(result, 2)
+        mock_query.filter.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_count_all_with_email_and_name_filters(self, mock_get_session):
+        """Prueba contar usuarios con filtros de email y nombre"""
+        # Configurar mock de sesión
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar mock de query
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.count.return_value = 1
+        
+        # Ejecutar
+        result = self.repository.count_all(email='test', name='Hospital')
+        
+        # Verificar
+        self.assertEqual(result, 1)
+        # Verificar que se llamó filter dos veces (una para email, otra para name)
+        self.assertEqual(mock_query.filter.call_count, 2)
 
 
 if __name__ == '__main__':

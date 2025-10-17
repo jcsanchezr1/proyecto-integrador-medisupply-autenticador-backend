@@ -30,9 +30,12 @@ class UserController(BaseController):
                     message="Usuario obtenido exitosamente"
                 )
             else:
-                # Obtener lista de usuarios con paginación
+                # Obtener lista de usuarios con paginación y filtros opcionales
                 page = request.args.get('page', 1, type=int)
                 per_page = request.args.get('per_page', 10, type=int)
+                email = request.args.get('email', type=str)
+                name = request.args.get('name', type=str)
+                role = request.args.get('role', type=str)
                 
                 # Validar parámetros de paginación
                 if page < 1:
@@ -43,12 +46,19 @@ class UserController(BaseController):
                 
                 offset = (page - 1) * per_page
                 
-                # Obtener usuarios y total
+                # Obtener usuarios y total con filtros
                 users = self.user_service.get_users_summary(
                     limit=per_page,
-                    offset=offset
+                    offset=offset,
+                    email=email,
+                    name=name,
+                    role=role
                 )
-                total = self.user_service.get_users_count()
+                total = self.user_service.get_users_count(
+                    email=email,
+                    name=name,
+                    role=role
+                )
                 
                 # Calcular información de paginación
                 total_pages = (total + per_page - 1) // per_page  # Ceiling division
