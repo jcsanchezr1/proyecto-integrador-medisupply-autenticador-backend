@@ -174,11 +174,21 @@ class UserRepository(BaseRepository):
         finally:
             session.close()
     
-    def get_all(self, limit: Optional[int] = None, offset: int = 0) -> List[User]:
-        """Obtiene todos los usuarios ordenados por nombre de institución"""
+    def get_all(self, limit: Optional[int] = None, offset: int = 0, email: Optional[str] = None, name: Optional[str] = None) -> List[User]:
+        """Obtiene todos los usuarios ordenados por nombre de institución con filtros opcionales"""
         session = self._get_session()
         try:
-            query = session.query(UserDB).order_by(UserDB.name.asc()).offset(offset)
+            query = session.query(UserDB)
+            
+            # Aplicar filtros opcionales usando LIKE
+            if email:
+                query = query.filter(UserDB.email.ilike(f'%{email}%'))
+            
+            if name:
+                query = query.filter(UserDB.name.ilike(f'%{name}%'))
+            
+            # Ordenar y aplicar paginación
+            query = query.order_by(UserDB.name.asc()).offset(offset)
             if limit:
                 query = query.limit(limit)
             
@@ -256,11 +266,20 @@ class UserRepository(BaseRepository):
         finally:
             session.close()
     
-    def count_all(self) -> int:
-        """Cuenta el total de usuarios"""
+    def count_all(self, email: Optional[str] = None, name: Optional[str] = None) -> int:
+        """Cuenta el total de usuarios con filtros opcionales"""
         session = self._get_session()
         try:
-            return session.query(UserDB).count()
+            query = session.query(UserDB)
+            
+            # Aplicar filtros opcionales usando LIKE
+            if email:
+                query = query.filter(UserDB.email.ilike(f'%{email}%'))
+            
+            if name:
+                query = query.filter(UserDB.name.ilike(f'%{name}%'))
+            
+            return query.count()
         except SQLAlchemyError as e:
             raise Exception(f"Error al contar usuarios: {str(e)}")
         finally:

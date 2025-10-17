@@ -308,7 +308,9 @@ class TestUserControllerExtended(unittest.TestCase):
             response, status_code = self.controller.get()
             
             self.assertEqual(status_code, 200)
-            self.mock_user_service.get_users_summary.assert_called_once_with(limit=10, offset=0)
+            self.mock_user_service.get_users_summary.assert_called_once_with(
+                limit=10, offset=0, email=None, name=None, role=None
+            )
     
     def test_process_json_request_success(self):
         """Prueba _process_json_request exitoso"""
@@ -803,6 +805,128 @@ class TestUserControllerAdditional(unittest.TestCase):
             self.assertTrue(pagination['has_next'])  # page 1 < total_pages 3
             self.assertIsNone(pagination['prev_page'])
             self.assertEqual(pagination['next_page'], 2)
+    
+    def test_get_users_list_with_email_filter(self):
+        """Prueba GET con filtro de email"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=10&email=test'):
+            # Configurar mocks
+            mock_users = [
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com'}
+            ]
+            self.mock_user_service.get_users_summary.return_value = mock_users
+            self.mock_user_service.get_users_count.return_value = 1
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.assertEqual(len(response['data']['users']), 1)
+            self.mock_user_service.get_users_summary.assert_called_once_with(
+                limit=10, offset=0, email='test', name=None, role=None
+            )
+            self.mock_user_service.get_users_count.assert_called_once_with(
+                email='test', name=None, role=None
+            )
+    
+    def test_get_users_list_with_name_filter(self):
+        """Prueba GET con filtro de nombre"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=10&name=Hospital'):
+            # Configurar mocks
+            mock_users = [
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com'}
+            ]
+            self.mock_user_service.get_users_summary.return_value = mock_users
+            self.mock_user_service.get_users_count.return_value = 1
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.assertEqual(len(response['data']['users']), 1)
+            self.mock_user_service.get_users_summary.assert_called_once_with(
+                limit=10, offset=0, email=None, name='Hospital', role=None
+            )
+            self.mock_user_service.get_users_count.assert_called_once_with(
+                email=None, name='Hospital', role=None
+            )
+    
+    def test_get_users_list_with_role_filter(self):
+        """Prueba GET con filtro de rol"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=10&role=Cliente'):
+            # Configurar mocks
+            mock_users = [
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'role': 'Cliente'}
+            ]
+            self.mock_user_service.get_users_summary.return_value = mock_users
+            self.mock_user_service.get_users_count.return_value = 1
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.assertEqual(len(response['data']['users']), 1)
+            self.mock_user_service.get_users_summary.assert_called_once_with(
+                limit=10, offset=0, email=None, name=None, role='Cliente'
+            )
+            self.mock_user_service.get_users_count.assert_called_once_with(
+                email=None, name=None, role='Cliente'
+            )
+    
+    def test_get_users_list_with_all_filters(self):
+        """Prueba GET con todos los filtros"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=10&email=test&name=Hospital&role=Cliente'):
+            # Configurar mocks
+            mock_users = [
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'role': 'Cliente'}
+            ]
+            self.mock_user_service.get_users_summary.return_value = mock_users
+            self.mock_user_service.get_users_count.return_value = 1
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.assertEqual(len(response['data']['users']), 1)
+            self.mock_user_service.get_users_summary.assert_called_once_with(
+                limit=10, offset=0, email='test', name='Hospital', role='Cliente'
+            )
+            self.mock_user_service.get_users_count.assert_called_once_with(
+                email='test', name='Hospital', role='Cliente'
+            )
+    
+    def test_get_users_list_with_filters_no_results(self):
+        """Prueba GET con filtros que no devuelven resultados"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=10&email=noexiste'):
+            # Configurar mocks
+            self.mock_user_service.get_users_summary.return_value = []
+            self.mock_user_service.get_users_count.return_value = 0
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.assertEqual(len(response['data']['users']), 0)
+            self.assertEqual(response['data']['pagination']['total'], 0)
+            self.assertEqual(response['data']['pagination']['total_pages'], 0)
+    
+    def test_get_users_list_with_pagination_and_filters(self):
+        """Prueba GET con paginación y filtros combinados"""
+        with self.app.test_request_context('/auth/user?page=2&per_page=5&name=Hospital'):
+            # Configurar mocks
+            mock_users = [{'id': str(i), 'name': f'Hospital {i}'} for i in range(6, 11)]
+            self.mock_user_service.get_users_summary.return_value = mock_users
+            self.mock_user_service.get_users_count.return_value = 15
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 200)
+            self.assertEqual(len(response['data']['users']), 5)
+            pagination = response['data']['pagination']
+            self.assertEqual(pagination['page'], 2)
+            self.assertEqual(pagination['total'], 15)
+            self.assertEqual(pagination['total_pages'], 3)
+            self.assertTrue(pagination['has_next'])
+            self.assertTrue(pagination['has_prev'])
+            
+            # Verificar que se pasaron los filtros correctamente
+            self.mock_user_service.get_users_summary.assert_called_once_with(
+                limit=5, offset=5, email=None, name='Hospital', role=None
+            )
 
 
 if __name__ == '__main__':
