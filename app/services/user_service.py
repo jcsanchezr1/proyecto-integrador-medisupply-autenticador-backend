@@ -61,10 +61,10 @@ class UserService(BaseService):
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener usuario: {str(e)}")
     
-    def get_all(self, limit: Optional[int] = None, offset: int = 0) -> List[User]:
-        """Obtiene todos los usuarios con paginación"""
+    def get_all(self, limit: Optional[int] = None, offset: int = 0, email: Optional[str] = None, name: Optional[str] = None) -> List[User]:
+        """Obtiene todos los usuarios con paginación y filtros opcionales"""
         try:
-            return self.user_repository.get_all(limit=limit, offset=offset)
+            return self.user_repository.get_all(limit=limit, offset=offset, email=email, name=name)
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener usuarios: {str(e)}")
     
@@ -182,30 +182,55 @@ class UserService(BaseService):
             raise ValueError("; ".join(errors))
     
     
-    def get_users_summary(self, limit: Optional[int] = None, offset: int = 0) -> List[dict]:
-        """Obtiene un resumen de usuarios para listado"""
+    def get_users_summary(self, limit: Optional[int] = None, offset: int = 0, email: Optional[str] = None, name: Optional[str] = None, role: Optional[str] = None) -> List[dict]:
+        """Obtiene un resumen de usuarios para listado con filtros opcionales"""
         try:
-            users = self.get_all(limit=limit, offset=offset)
+            # Obtener usuarios de la base de datos con filtros de email y name
+            users = self.get_all(limit=limit, offset=offset, email=email, name=name)
             
-            return [
-                {
+            # Crear lista de resumen con roles de Keycloak
+            users_summary = []
+            for user in users:
+                user_role = self.keycloak_client.get_user_role(user.email)
+                
+                # Filtrar por role si se especificó (búsqueda tipo LIKE case-insensitive)
+                if role:
+                    if role.lower() not in user_role.lower():
+                        continue
+                
+                users_summary.append({
                     'id': user.id,
                     'name': user.name,
                     'email': user.email,
                     'institution_type': user.institution_type,
                     'phone': user.phone,
-                    'role': self.keycloak_client.get_user_role(user.email)
-                }
-                for user in users
-            ]
+                    'role': user_role
+                })
+            
+            return users_summary
             
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener resumen de usuarios: {str(e)}")
     
-    def get_users_count(self) -> int:
-        """Obtiene el total de usuarios"""
+    def get_users_count(self, email: Optional[str] = None, name: Optional[str] = None, role: Optional[str] = None) -> int:
+        """Obtiene el total de usuarios con filtros opcionales"""
         try:
-            return self.user_repository.count_all()
+            # Si hay filtro de role, necesitamos contar después de filtrar por Keycloak
+            if role:
+                # Obtener todos los usuarios con filtros de email y name (sin límite)
+                users = self.get_all(limit=None, offset=0, email=email, name=name)
+                
+                # Contar usuarios que coinciden con el filtro de role
+                count = 0
+                for user in users:
+                    user_role = self.keycloak_client.get_user_role(user.email)
+                    if role.lower() in user_role.lower():
+                        count += 1
+                
+                return count
+            else:
+                # Sin filtro de role, contar directamente en la base de datos
+                return self.user_repository.count_all(email=email, name=name)
         except Exception as e:
             raise BusinessLogicError(f"Error al contar usuarios: {str(e)}")
     

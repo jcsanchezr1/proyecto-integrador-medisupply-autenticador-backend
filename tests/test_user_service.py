@@ -160,7 +160,7 @@ class TestUserService(unittest.TestCase):
         
         # Verificar
         self.assertEqual(result, mock_users)
-        self.mock_user_repository.get_all.assert_called_once_with(limit=10, offset=0)
+        self.mock_user_repository.get_all.assert_called_once_with(limit=10, offset=0, email=None, name=None)
     
     def test_get_all_business_logic_error(self):
         """Prueba obtener todos los usuarios con error"""
@@ -748,6 +748,178 @@ class TestUserService(unittest.TestCase):
         self.assertIn("email", str(context.exception))
         self.assertIn("password", str(context.exception))
         self.assertIn("role", str(context.exception))
+    
+    def test_get_all_with_filters(self):
+        """Prueba obtener usuarios con filtros de email y name"""
+        # Configurar mock
+        mock_users = [
+            User(id='1', name='Hospital Test', email='test@hospital.com'),
+            User(id='2', name='Clínica Test', email='test@clinica.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        
+        # Ejecutar
+        result = self.service.get_all(limit=10, offset=0, email='test', name='Hospital')
+        
+        # Verificar
+        self.assertEqual(result, mock_users)
+        self.mock_user_repository.get_all.assert_called_once_with(
+            limit=10, offset=0, email='test', name='Hospital'
+        )
+    
+    def test_get_users_summary_with_email_filter(self):
+        """Prueba obtener resumen de usuarios con filtro de email"""
+        # Configurar mocks
+        mock_users = [
+            User(id='1', name='Hospital Test', email='test@hospital.com'),
+            User(id='2', name='Clínica Test', email='test@clinica.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
+        
+        # Ejecutar
+        result = self.service.get_users_summary(limit=10, offset=0, email='test')
+        
+        # Verificar
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]['email'], 'test@hospital.com')
+        self.assertEqual(result[1]['email'], 'test@clinica.com')
+    
+    def test_get_users_summary_with_name_filter(self):
+        """Prueba obtener resumen de usuarios con filtro de nombre"""
+        # Configurar mocks
+        mock_users = [
+            User(id='1', name='Hospital Test', email='h1@test.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
+        
+        # Ejecutar
+        result = self.service.get_users_summary(limit=10, offset=0, name='Hospital')
+        
+        # Verificar
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['name'], 'Hospital Test')
+    
+    def test_get_users_summary_with_role_filter(self):
+        """Prueba obtener resumen de usuarios con filtro de rol"""
+        # Configurar mocks
+        mock_users = [
+            User(id='1', name='Hospital 1', email='h1@test.com'),
+            User(id='2', name='Hospital 2', email='h2@test.com'),
+            User(id='3', name='Hospital 3', email='h3@test.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        
+        # Simular diferentes roles
+        def get_role_side_effect(email):
+            if email == 'h1@test.com':
+                return 'Administrador'
+            elif email == 'h2@test.com':
+                return 'Cliente'
+            else:
+                return 'Compras'
+        
+        self.mock_keycloak_client.get_user_role.side_effect = get_role_side_effect
+        
+        # Ejecutar
+        result = self.service.get_users_summary(limit=10, offset=0, role='Admin')
+        
+        # Verificar - solo debe devolver el que tiene rol 'Administrador'
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['email'], 'h1@test.com')
+        self.assertEqual(result[0]['role'], 'Administrador')
+    
+    def test_get_users_summary_with_all_filters(self):
+        """Prueba obtener resumen de usuarios con todos los filtros"""
+        # Configurar mocks
+        mock_users = [
+            User(id='1', name='Hospital Test', email='test@hospital.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
+        
+        # Ejecutar
+        result = self.service.get_users_summary(
+            limit=10, offset=0, email='test', name='Hospital', role='Cliente'
+        )
+        
+        # Verificar
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['name'], 'Hospital Test')
+        self.assertEqual(result[0]['role'], 'Cliente')
+    
+    def test_get_users_summary_role_filter_no_match(self):
+        """Prueba obtener resumen de usuarios con filtro de rol que no coincide"""
+        # Configurar mocks
+        mock_users = [
+            User(id='1', name='Hospital Test', email='test@hospital.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
+        
+        # Ejecutar
+        result = self.service.get_users_summary(limit=10, offset=0, role='Administrador')
+        
+        # Verificar - no debe devolver ningún usuario
+        self.assertEqual(len(result), 0)
+    
+    def test_get_users_count_without_role_filter(self):
+        """Prueba contar usuarios sin filtro de rol"""
+        # Configurar mock
+        self.mock_user_repository.count_all.return_value = 5
+        
+        # Ejecutar
+        result = self.service.get_users_count(email='test', name='Hospital')
+        
+        # Verificar
+        self.assertEqual(result, 5)
+        self.mock_user_repository.count_all.assert_called_once_with(email='test', name='Hospital')
+    
+    def test_get_users_count_with_role_filter(self):
+        """Prueba contar usuarios con filtro de rol"""
+        # Configurar mocks
+        mock_users = [
+            User(id='1', name='Hospital 1', email='h1@test.com'),
+            User(id='2', name='Hospital 2', email='h2@test.com'),
+            User(id='3', name='Hospital 3', email='h3@test.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        
+        # Simular diferentes roles
+        def get_role_side_effect(email):
+            if email == 'h1@test.com':
+                return 'Administrador'
+            elif email == 'h2@test.com':
+                return 'Cliente'
+            else:
+                return 'Cliente'
+        
+        self.mock_keycloak_client.get_user_role.side_effect = get_role_side_effect
+        
+        # Ejecutar
+        result = self.service.get_users_count(role='Cliente')
+        
+        # Verificar - debe contar 2 usuarios con rol 'Cliente'
+        self.assertEqual(result, 2)
+        self.mock_user_repository.get_all.assert_called_once_with(
+            limit=None, offset=0, email=None, name=None
+        )
+    
+    def test_get_users_count_with_all_filters(self):
+        """Prueba contar usuarios con todos los filtros"""
+        # Configurar mocks
+        mock_users = [
+            User(id='1', name='Hospital Test', email='test@hospital.com')
+        ]
+        self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
+        
+        # Ejecutar
+        result = self.service.get_users_count(email='test', name='Hospital', role='Cliente')
+        
+        # Verificar
+        self.assertEqual(result, 1)
 
 
 if __name__ == '__main__':
