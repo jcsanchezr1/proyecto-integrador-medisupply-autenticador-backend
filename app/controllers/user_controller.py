@@ -115,11 +115,18 @@ class UserController(BaseController):
             required_fields = [
                 'name', 'tax_id', 'email', 'address', 'phone', 
                 'institution_type', 'specialty', 'applicant_name', 'applicant_email', 
-                'password', 'confirm_password'
+                'password', 'confirm_password', 'latitude', 'longitude'
             ]
             for field in required_fields:
-                if field not in json_data or not json_data[field]:
+                if field not in json_data:
                     raise ValidationError(f"El campo '{field}' es obligatorio")
+                # Para latitude y longitude permitir None o valores numéricos, pero no strings vacíos
+                if field in ['latitude', 'longitude']:
+                    if json_data[field] is None or json_data[field] == '':
+                        raise ValidationError(f"El campo '{field}' es obligatorio")
+                else:
+                    if not json_data[field]:
+                        raise ValidationError(f"El campo '{field}' es obligatorio")
             
             return {
                 'name': json_data['name'].strip(),
@@ -132,6 +139,8 @@ class UserController(BaseController):
                 'specialty': json_data['specialty'].strip(),
                 'applicant_name': json_data['applicant_name'].strip(),
                 'applicant_email': json_data['applicant_email'].strip(),
+                'latitude': json_data['latitude'],
+                'longitude': json_data['longitude'],
                 'password': json_data['password'].strip(),
                 'confirm_password': json_data['confirm_password'].strip()
             }
@@ -151,11 +160,18 @@ class UserController(BaseController):
             required_fields = [
                 'name', 'tax_id', 'email', 'address', 'phone', 
                 'institution_type', 'specialty', 'applicant_name', 'applicant_email', 
-                'password', 'confirm_password'
+                'password', 'confirm_password', 'latitude', 'longitude'
             ]
             for field in required_fields:
-                if field not in form_data or not form_data[field]:
+                if field not in form_data:
                     raise ValidationError(f"El campo '{field}' es obligatorio")
+                # Para latitude y longitude permitir valores numéricos (como strings en form-data)
+                if field in ['latitude', 'longitude']:
+                    if not form_data[field] or form_data[field].strip() == '':
+                        raise ValidationError(f"El campo '{field}' es obligatorio")
+                else:
+                    if not form_data[field]:
+                        raise ValidationError(f"El campo '{field}' es obligatorio")
             
             # Obtener archivo de logo si existe
             logo_file = None
@@ -175,6 +191,8 @@ class UserController(BaseController):
                 'specialty': form_data['specialty'].strip(),
                 'applicant_name': form_data['applicant_name'].strip(),
                 'applicant_email': form_data['applicant_email'].strip(),
+                'latitude': float(form_data['latitude']),
+                'longitude': float(form_data['longitude']),
                 'password': form_data['password'].strip(),
                 'confirm_password': form_data['confirm_password'].strip()
             }
