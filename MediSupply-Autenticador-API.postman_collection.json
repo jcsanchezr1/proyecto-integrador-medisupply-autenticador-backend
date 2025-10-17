@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "0b391a89-fe11-4a7c-86e6-7b7f86afcbc9",
+		"_postman_id": "d24cdac2-eb75-44bc-b599-c8ae575faac1",
 		"name": "MediSupply Autenticador API",
 		"description": "Colección de endpoints para el servicio de autenticación MediSupply con automatización de pruebas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-0b391a89-fe11-4a7c-86e6-7b7f86afcbc9?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-d24cdac2-eb75-44bc-b599-c8ae575faac1?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -1978,6 +1978,266 @@
 					]
 				},
 				"description": "Ejemplo de error cuando el usuario no existe"
+			},
+			"response": []
+		},
+		{
+			"name": "Buscar Usuarios por Email - Exitoso",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar búsqueda de usuarios por email",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has correct structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('users');",
+							"    pm.expect(jsonData.data).to.have.property('pagination');",
+							"});",
+							"",
+							"pm.test(\"Users array is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.users).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Filtered users contain search term in email\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const users = jsonData.data.users;",
+							"    if (users.length > 0) {",
+							"        users.forEach(user => {",
+							"            pm.expect(user.email.toLowerCase()).to.include('gmail');",
+							"        });",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 3000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/auth/user?page=1&per_page=10&email=gmail",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"user"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "per_page",
+							"value": "10"
+						},
+						{
+							"key": "email",
+							"value": "gmail",
+							"description": "Filtrar usuarios cuyo email contenga 'gmail'"
+						}
+					]
+				},
+				"description": "Buscar usuarios filtrando por email que contenga 'gmail'"
+			},
+			"response": []
+		},
+		{
+			"name": "Buscar Usuarios por Name - Exitoso",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar búsqueda de usuarios por nombre",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has correct structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('users');",
+							"    pm.expect(jsonData.data).to.have.property('pagination');",
+							"});",
+							"",
+							"pm.test(\"Users array is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.users).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Filtered users contain search term in name\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const users = jsonData.data.users;",
+							"    if (users.length > 0) {",
+							"        users.forEach(user => {",
+							"            pm.expect(user.name.toLowerCase()).to.include('medisupply');",
+							"        });",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 3000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/auth/user?page=1&per_page=10&name=medisupply",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"user"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "per_page",
+							"value": "10"
+						},
+						{
+							"key": "name",
+							"value": "medisupply",
+							"description": "Filtrar usuarios cuyo nombre contenga 'medisupply'"
+						}
+					]
+				},
+				"description": "Buscar usuarios filtrando por nombre que contenga 'Hospital'"
+			},
+			"response": []
+		},
+		{
+			"name": "Buscar Usuarios por Role - Exitoso",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar búsqueda de usuarios por rol",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has correct structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('users');",
+							"    pm.expect(jsonData.data).to.have.property('pagination');",
+							"});",
+							"",
+							"pm.test(\"Users array is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.users).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Filtered users have the specified role\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const users = jsonData.data.users;",
+							"    if (users.length > 0) {",
+							"        users.forEach(user => {",
+							"            pm.expect(user).to.have.property('role');",
+							"            pm.expect(user.role.toLowerCase()).to.include('administrador');",
+							"        });",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 3000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/auth/user?page=1&per_page=10&role=Administrador",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"user"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "per_page",
+							"value": "10"
+						},
+						{
+							"key": "role",
+							"value": "Administrador",
+							"description": "Filtrar usuarios con rol 'Administrador'"
+						}
+					]
+				},
+				"description": "Buscar usuarios filtrando por rol 'Cliente'"
 			},
 			"response": []
 		},
