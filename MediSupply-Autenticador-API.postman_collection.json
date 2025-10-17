@@ -211,7 +211,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"{{nombre_institucion}}\",\n  \"tax_id\": \"{{tax_id}}\",\n  \"email\": \"{{email_institucion}}\",\n  \"address\": \"{{direccion}}\",\n  \"phone\": \"{{telefono}}\",\n  \"institution_type\": \"{{tipo_institucion}}\",\n  \"logo_filename\": \"{{logo_filename}}\",\n  \"specialty\": \"{{especialidad}}\",\n  \"applicant_name\": \"{{nombre_solicitante}}\",\n  \"applicant_email\": \"{{email_solicitante}}\",\n  \"password\": \"{{password_usuario}}\",\n  \"confirm_password\": \"{{password_usuario}}\"\n}"
+					"raw": "{\n  \"name\": \"{{nombre_institucion}}\",\n  \"tax_id\": \"{{tax_id}}\",\n  \"email\": \"{{email_institucion}}\",\n  \"address\": \"{{direccion}}\",\n  \"phone\": \"{{telefono}}\",\n  \"institution_type\": \"{{tipo_institucion}}\",\n  \"logo_filename\": \"{{logo_filename}}\",\n  \"specialty\": \"{{especialidad}}\",\n  \"applicant_name\": \"{{nombre_solicitante}}\",\n  \"applicant_email\": \"{{email_solicitante}}\",\n  \"latitude\": 4.711,\n  \"longitude\": -74.0721,\n  \"password\": \"{{password_usuario}}\",\n  \"confirm_password\": \"{{password_usuario}}\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -380,6 +380,16 @@
 							"type": "text"
 						},
 						{
+							"key": "latitude",
+							"value": "4.711",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "-74.0721",
+							"type": "text"
+						},
+						{
 							"key": "password",
 							"value": "{{password_imagen}}",
 							"type": "text"
@@ -484,7 +494,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"Hospital Test Duplicado\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{created_user_email}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Alto valor\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Hospital Test Duplicado\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{created_user_email}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Alto valor\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"latitude\": 4.711,\n  \"longitude\": -74.0721,\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -545,7 +555,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"{{nombre_invalido}}\",\n  \"tax_id\": \"{{tax_id_invalido}}\",\n  \"email\": \"{{email_invalido}}\",\n  \"address\": \"{{direccion_invalida}}\",\n  \"phone\": \"{{telefono_invalido}}\",\n  \"institution_type\": \"{{tipo_invalido}}\",\n  \"specialty\": \"{{especialidad_invalida}}\",\n  \"applicant_name\": \"{{nombre_solicitante_invalido}}\",\n  \"applicant_email\": \"{{email_solicitante_invalido}}\",\n  \"password\": \"{{password_invalido}}\",\n  \"confirm_password\": \"{{password_confirm_invalido}}\"\n}"
+					"raw": "{\n  \"name\": \"{{nombre_invalido}}\",\n  \"tax_id\": \"{{tax_id_invalido}}\",\n  \"email\": \"{{email_invalido}}\",\n  \"address\": \"{{direccion_invalida}}\",\n  \"phone\": \"{{telefono_invalido}}\",\n  \"institution_type\": \"{{tipo_invalido}}\",\n  \"specialty\": \"{{especialidad_invalida}}\",\n  \"applicant_name\": \"{{nombre_solicitante_invalido}}\",\n  \"applicant_email\": \"{{email_solicitante_invalido}}\",\n  \"latitude\": 4.711,\n  \"longitude\": -74.0721,\n  \"password\": \"{{password_invalido}}\",\n  \"confirm_password\": \"{{password_confirm_invalido}}\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -631,7 +641,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"Laboratorio Central\",\n  \"tax_id\": \"55555555-5\",\n  \"email\": \"{{email_tipos_institucion}}\",\n  \"address\": \"Calle 321 #65-43, Barranquilla\",\n  \"phone\": \"3007777777\",\n  \"institution_type\": \"Laboratorio\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Ana Martínez\",\n  \"applicant_email\": \"ana.martinez@laboratoriocentral.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Laboratorio Central\",\n  \"tax_id\": \"55555555-5\",\n  \"email\": \"{{email_tipos_institucion}}\",\n  \"address\": \"Calle 321 #65-43, Barranquilla\",\n  \"phone\": \"3007777777\",\n  \"institution_type\": \"Laboratorio\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Ana Martínez\",\n  \"applicant_email\": \"ana.martinez@laboratoriocentral.com\",\n  \"latitude\": 10.9639,\n  \"longitude\": -74.7964,\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -710,7 +720,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"Hospital Test Tipo Inválido\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{email_tipo_invalido}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Tipo Inválido\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Hospital Test Tipo Inválido\",\n  \"tax_id\": \"12345678-9\",\n  \"email\": \"{{email_tipo_invalido}}\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"phone\": \"3001234567\",\n  \"institution_type\": \"Tipo Inválido\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Juan Pérez\",\n  \"applicant_email\": \"juan.perez@hospital.com\",\n  \"latitude\": 4.711,\n  \"longitude\": -74.0721,\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -789,7 +799,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"Clínica Especializada\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidades}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Seguridad\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Clínica Especializada\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidades}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Seguridad\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"latitude\": 6.2442,\n  \"longitude\": -75.5812,\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -868,7 +878,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"Clínica Test Especialidad Inválida\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidad_invalida}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Especialidad Inválida\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Clínica Test Especialidad Inválida\",\n  \"tax_id\": \"87654321-0\",\n  \"email\": \"{{email_especialidad_invalida}}\",\n  \"address\": \"Calle 456 #78-90, Medellín\",\n  \"phone\": \"3009876543\",\n  \"institution_type\": \"Clínica\",\n  \"specialty\": \"Especialidad Inválida\",\n  \"applicant_name\": \"Dr. María García\",\n  \"applicant_email\": \"maria.garcia@clinicaespecializada.com\",\n  \"latitude\": 6.2442,\n  \"longitude\": -75.5812,\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",
@@ -947,7 +957,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"Hospital con nombre muy largo que excede los 100 caracteres permitidos y debería generar un error de validación\",\n  \"tax_id\": \"11111111-1\",\n  \"email\": \"{{email_limites_caracteres}}\",\n  \"address\": \"Calle 789 #12-34, Cali\",\n  \"phone\": \"3005555555\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Carlos López\",\n  \"applicant_email\": \"carlos.lopez@hospital.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+					"raw": "{\n  \"name\": \"Hospital con nombre muy largo que excede los 100 caracteres permitidos y debería generar un error de validación\",\n  \"tax_id\": \"11111111-1\",\n  \"email\": \"{{email_limites_caracteres}}\",\n  \"address\": \"Calle 789 #12-34, Cali\",\n  \"phone\": \"3005555555\",\n  \"institution_type\": \"Hospital\",\n  \"specialty\": \"Cadena de frío\",\n  \"applicant_name\": \"Dr. Carlos López\",\n  \"applicant_email\": \"carlos.lopez@hospital.com\",\n  \"latitude\": 3.4516,\n  \"longitude\": -76.532,\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/auth/user",

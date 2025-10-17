@@ -93,6 +93,8 @@ class TestUserController(unittest.TestCase):
                 'specialty': 'Alto valor',
                 'applicant_name': 'John Doe',
                 'applicant_email': 'john@hospital.com',
+                'latitude': 4.711,
+                'longitude': -74.0721,
                 'password': 'password123',
                 'confirm_password': 'password123'
             }
@@ -124,6 +126,8 @@ class TestUserController(unittest.TestCase):
                 'specialty': 'Alto valor',
                 'applicant_name': 'John Doe',
                 'applicant_email': 'john@hospital.com',
+                'latitude': 4.711,
+                'longitude': -74.0721,
                 'password': 'password123',
                 'confirm_password': 'password123'
             }
@@ -154,6 +158,8 @@ class TestUserController(unittest.TestCase):
                 'specialty': 'Alto valor',
                 'applicant_name': 'John Doe',
                 'applicant_email': 'john@hospital.com',
+                'latitude': 4.711,
+                'longitude': -74.0721,
                 'password': 'password123',
                 'confirm_password': 'password123'
             }
@@ -316,6 +322,8 @@ class TestUserControllerExtended(unittest.TestCase):
             'specialty': 'Cardiología',
             'applicant_name': 'Dr. Smith',
             'applicant_email': 'dr.smith@hospital.com',
+            'latitude': 4.711,
+            'longitude': -74.0721,
             'password': 'password123',
             'confirm_password': 'password123',
             'logo_filename': 'logo.jpg'
@@ -324,6 +332,8 @@ class TestUserControllerExtended(unittest.TestCase):
             
             self.assertEqual(result['name'], 'Test Hospital')
             self.assertEqual(result['email'], 'test@hospital.com')
+            self.assertEqual(result['latitude'], 4.711)
+            self.assertEqual(result['longitude'], -74.0721)
             self.assertEqual(result['logo_filename'], 'logo.jpg')
     
     def test_process_json_request_missing_field(self):
@@ -350,6 +360,8 @@ class TestUserControllerExtended(unittest.TestCase):
             'specialty': 'Cardiología',
             'applicant_name': 'Dr. Smith',
             'applicant_email': 'dr.smith@hospital.com',
+            'latitude': '4.711',
+            'longitude': '-74.0721',
             'password': 'password123',
             'confirm_password': 'password123'
         }):
@@ -357,6 +369,8 @@ class TestUserControllerExtended(unittest.TestCase):
             
             self.assertEqual(result['name'], 'Test Hospital')
             self.assertEqual(result['email'], 'test@hospital.com')
+            self.assertEqual(result['latitude'], 4.711)
+            self.assertEqual(result['longitude'], -74.0721)
             self.assertIsNone(result['logo_file'])
     
     def test_process_multipart_request_missing_field(self):
@@ -385,6 +399,8 @@ class TestUserControllerExtended(unittest.TestCase):
                                              'specialty': 'Cardiología',
                                              'applicant_name': 'Dr. Smith',
                                              'applicant_email': 'dr.smith@hospital.com',
+                                             'latitude': '4.711',
+                                             'longitude': '-74.0721',
                                              'password': 'password123',
                                              'confirm_password': 'password123'
                                          }):
@@ -410,6 +426,8 @@ class TestUserControllerExtended(unittest.TestCase):
             'specialty': 'Cardiología',
             'applicant_name': 'Dr. Smith',
             'applicant_email': 'dr.smith@hospital.com',
+            'latitude': 4.711,
+            'longitude': -74.0721,
             'password': 'password123',
             'confirm_password': 'password123'
         }):
@@ -642,6 +660,8 @@ class TestUserControllerAdditional(unittest.TestCase):
             'specialty': 'Cardiología',
             'applicant_name': 'Dr. Smith',
             'applicant_email': 'dr.smith@hospital.com',
+            'latitude': '4.711',
+            'longitude': '-74.0721',
             'password': 'password123',
             'confirm_password': 'password123'
         }):
@@ -657,6 +677,8 @@ class TestUserControllerAdditional(unittest.TestCase):
                     'specialty': 'Cardiología',
                     'applicant_name': 'Dr. Smith',
                     'applicant_email': 'dr.smith@hospital.com',
+                    'latitude': 4.711,
+                    'longitude': -74.0721,
                     'password': 'password123',
                     'confirm_password': 'password123',
                     'logo_file': mock_file
@@ -683,6 +705,8 @@ class TestUserControllerAdditional(unittest.TestCase):
             'specialty': 'Cardiología',
             'applicant_name': 'Dr. Smith',
             'applicant_email': 'dr.smith@hospital.com',
+            'latitude': '4.711',
+            'longitude': '-74.0721',
             'password': 'password123',
             'confirm_password': 'password123'
         }):
@@ -698,6 +722,8 @@ class TestUserControllerAdditional(unittest.TestCase):
                     'specialty': 'Cardiología',
                     'applicant_name': 'Dr. Smith',
                     'applicant_email': 'dr.smith@hospital.com',
+                    'latitude': 4.711,
+                    'longitude': -74.0721,
                     'password': 'password123',
                     'confirm_password': 'password123',
                     'logo_file': None  # Debe ser None porque filename está vacío

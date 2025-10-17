@@ -351,6 +351,8 @@ class TestUser(unittest.TestCase):
             specialty="Cadena de frío",
             applicant_name="Dr. Smith",
             applicant_email="dr.smith@hospital.com",
+            latitude=4.711,
+            longitude=-74.0721,
             password="password123",
             confirm_password="password123",
             role="Cliente"
@@ -438,6 +440,168 @@ class TestUser(unittest.TestCase):
         # Verificar que el tax_id no esté vacío
         if not user.tax_id or not user.tax_id.strip():
             self.fail("Tax ID no puede estar vacío")
+    
+    def test_validate_latitude_required(self):
+        """Test de validación con latitud vacía"""
+        user = User(
+            name="Test Hospital",
+            tax_id="12345678-9",
+            email="test@hospital.com",
+            address="123 Main St",
+            phone="1234567890",
+            institution_type="Hospital",
+            specialty="Cadena de frío",
+            applicant_name="Dr. Smith",
+            applicant_email="dr.smith@hospital.com",
+            latitude=None,
+            longitude=-74.0721,
+            password="password123",
+            confirm_password="password123",
+            role="Cliente"
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            user.validate()
+        
+        self.assertIn("Latitud", str(context.exception))
+    
+    def test_validate_longitude_required(self):
+        """Test de validación con longitud vacía"""
+        user = User(
+            name="Test Hospital",
+            tax_id="12345678-9",
+            email="test@hospital.com",
+            address="123 Main St",
+            phone="1234567890",
+            institution_type="Hospital",
+            specialty="Cadena de frío",
+            applicant_name="Dr. Smith",
+            applicant_email="dr.smith@hospital.com",
+            latitude=4.711,
+            longitude=None,
+            password="password123",
+            confirm_password="password123",
+            role="Cliente"
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            user.validate()
+        
+        self.assertIn("Longitud", str(context.exception))
+    
+    def test_validate_latitude_invalid_value(self):
+        """Test de validación con latitud no numérica"""
+        user = User(
+            name="Test Hospital",
+            tax_id="12345678-9",
+            email="test@hospital.com",
+            address="123 Main St",
+            phone="1234567890",
+            institution_type="Hospital",
+            specialty="Cadena de frío",
+            applicant_name="Dr. Smith",
+            applicant_email="dr.smith@hospital.com",
+            latitude="invalid",
+            longitude=-74.0721,
+            password="password123",
+            confirm_password="password123",
+            role="Cliente"
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            user.validate()
+        
+        self.assertIn("Latitud", str(context.exception))
+    
+    def test_validate_longitude_invalid_value(self):
+        """Test de validación con longitud no numérica"""
+        user = User(
+            name="Test Hospital",
+            tax_id="12345678-9",
+            email="test@hospital.com",
+            address="123 Main St",
+            phone="1234567890",
+            institution_type="Hospital",
+            specialty="Cadena de frío",
+            applicant_name="Dr. Smith",
+            applicant_email="dr.smith@hospital.com",
+            latitude=4.711,
+            longitude="invalid",
+            password="password123",
+            confirm_password="password123",
+            role="Cliente"
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            user.validate()
+        
+        self.assertIn("Longitud", str(context.exception))
+    
+    def test_validate_latitude_out_of_range(self):
+        """Test de validación con latitud fuera de rango - ahora válido porque solo validamos que sea número"""
+        user = User(
+            name="Test Hospital",
+            tax_id="12345678-9",
+            email="test@hospital.com",
+            address="123 Main St",
+            phone="1234567890",
+            institution_type="Hospital",
+            specialty="Cadena de frío",
+            applicant_name="Dr. Smith",
+            applicant_email="dr.smith@hospital.com",
+            latitude=91.0,  # Ya no se valida rango, solo que sea número
+            longitude=-74.0721,
+            password="password123",
+            confirm_password="password123",
+            role="Cliente"
+        )
+        
+        # No debe lanzar excepción porque solo validamos que sea número
+        user.validate()
+    
+    def test_validate_longitude_out_of_range(self):
+        """Test de validación con longitud fuera de rango - ahora válido porque solo validamos que sea número"""
+        user = User(
+            name="Test Hospital",
+            tax_id="12345678-9",
+            email="test@hospital.com",
+            address="123 Main St",
+            phone="1234567890",
+            institution_type="Hospital",
+            specialty="Cadena de frío",
+            applicant_name="Dr. Smith",
+            applicant_email="dr.smith@hospital.com",
+            latitude=4.711,
+            longitude=181.0,  # Ya no se valida rango, solo que sea número
+            password="password123",
+            confirm_password="password123",
+            role="Cliente"
+        )
+        
+        # No debe lanzar excepción porque solo validamos que sea número
+        user.validate()
+    
+    def test_validate_latitude_longitude_valid(self):
+        """Test de validación con latitud y longitud válidas"""
+        user = User(
+            name="Test Hospital",
+            tax_id="12345678-9",
+            email="test@hospital.com",
+            address="123 Main St",
+            phone="1234567890",
+            institution_type="Hospital",
+            specialty="Cadena de frío",
+            applicant_name="Dr. Smith",
+            applicant_email="dr.smith@hospital.com",
+            latitude=4.711,
+            longitude=-74.0721,
+            password="password123",
+            confirm_password="password123",
+            role="Cliente"
+        )
+        
+        # No debe lanzar excepción
+        user.validate()
 
 
 if __name__ == '__main__':
