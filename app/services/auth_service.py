@@ -68,7 +68,8 @@ class AuthService:
             response_dict.update({
                 'email': user.email,
                 'name': user.name,
-                'role': user_role
+                'role': user_role,
+                'id': user.id
             })
             
             return response_dict
