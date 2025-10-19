@@ -32,6 +32,7 @@ class TestAuthService(unittest.TestCase):
         mock_user = Mock(spec=User)
         mock_user.email = "test@example.com"
         mock_user.name = "Test User"
+        mock_user.id = "Id Usuario"
         self.mock_user_repository.get_by_email.return_value = mock_user
         
         # Mock de respuesta exitosa de Keycloak
@@ -56,7 +57,8 @@ class TestAuthService(unittest.TestCase):
         expected_response.update({
             'email': 'test@example.com',
             'name': 'Test User',
-            'role': 'Administrador'
+            'role': 'Administrador',
+            'id': 'Id Usuario'
         })
         self.assertEqual(result, expected_response)
         self.mock_user_repository.get_by_email.assert_called_once_with(user_email)
@@ -111,6 +113,7 @@ class TestAuthService(unittest.TestCase):
         mock_user = Mock(spec=User)
         mock_user.email = "test@example.com"
         mock_user.name = "Test User"
+        mock_user.id = "Id User"
         self.mock_user_repository.get_by_email.return_value = mock_user
         
         # Mock de respuesta exitosa de Keycloak
@@ -136,7 +139,8 @@ class TestAuthService(unittest.TestCase):
         expected_response.update({
             'email': 'test@example.com',
             'name': 'Test User',
-            'role': 'Cliente'  # Debe usar 'Cliente' por defecto cuando hay error
+            'role': 'Cliente',
+            'id': 'Id User'
         })
         self.assertEqual(result, expected_response)
         self.mock_user_repository.get_by_email.assert_called_once_with(user_email)
