@@ -120,4 +120,3 @@ Para desplegar en Google Cloud Run:
 - `PORT`: Puerto del servicio (default: 8080)
 - `HOST`: Host del servicio (default: 0.0.0.0)
 - `DEBUG`: Modo debug (default: True)
-
