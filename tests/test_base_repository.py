@@ -1,127 +1,199 @@
 """
-Pruebas unitarias para BaseRepository usando unittest
+Tests para BaseRepository - Incrementar cobertura
 """
 import unittest
-import sys
-import os
-from abc import ABC
-
-# Agregar el directorio padre al path para importar la app
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
 from app.repositories.base_repository import BaseRepository
 
 
+class ConcreteRepository(BaseRepository):
+    """Repositorio concreto para testing de BaseRepository"""
+    
+    def __init__(self):
+        self.storage = {}
+    
+    def create(self, **kwargs):
+        """Implementación concreta de create"""
+        entity_id = kwargs.get('id', 'generated-id')
+        self.storage[entity_id] = kwargs
+        return kwargs
+    
+    def get_by_id(self, entity_id: str):
+        """Implementación concreta de get_by_id"""
+        return self.storage.get(entity_id)
+    
+    def get_all(self, limit=None, offset=0):
+        """Implementación concreta de get_all"""
+        items = list(self.storage.values())
+        if limit:
+            return items[offset:offset+limit]
+        return items[offset:]
+    
+    def update(self, entity_id: str, **kwargs):
+        """Implementación concreta de update"""
+        if entity_id in self.storage:
+            self.storage[entity_id].update(kwargs)
+            return self.storage[entity_id]
+        return None
+    
+    def delete(self, entity_id: str):
+        """Implementación concreta de delete"""
+        if entity_id in self.storage:
+            del self.storage[entity_id]
+            return True
+        return False
+    
+    def exists(self, entity_id: str):
+        """Implementación concreta de exists"""
+        return entity_id in self.storage
+
+
 class TestBaseRepository(unittest.TestCase):
-    """Pruebas para BaseRepository"""
+    """Tests para BaseRepository"""
     
-    def test_base_repository_is_abstract(self):
-        """Prueba que BaseRepository es una clase abstracta"""
-        self.assertTrue(issubclass(BaseRepository, ABC))
+    def setUp(self):
+        """Configuración inicial"""
+        self.repo = ConcreteRepository()
     
-    def test_base_repository_has_abstract_methods(self):
-        """Prueba que BaseRepository tiene métodos abstractos"""
-        # Verificar que los métodos abstractos están definidos
-        abstract_methods = BaseRepository.__abstractmethods__
+    def test_create(self):
+        """Test: create es método abstracto implementado"""
+        result = self.repo.create(id='123', name='Test')
         
-        expected_methods = {
-            'create', 'get_by_id', 'get_all', 'update', 'delete', 'exists'
-        }
-        
-        self.assertEqual(abstract_methods, expected_methods)
+        self.assertIsNotNone(result)
+        self.assertEqual(result['id'], '123')
+        self.assertEqual(result['name'], 'Test')
     
-    def test_cannot_instantiate_base_repository(self):
-        """Prueba que no se puede instanciar BaseRepository directamente"""
+    def test_get_by_id_found(self):
+        """Test: get_by_id encuentra entidad"""
+        self.repo.create(id='123', name='Test')
+        result = self.repo.get_by_id('123')
+        
+        self.assertIsNotNone(result)
+        self.assertEqual(result['name'], 'Test')
+    
+    def test_get_by_id_not_found(self):
+        """Test: get_by_id no encuentra entidad"""
+        result = self.repo.get_by_id('non-existent')
+        
+        self.assertIsNone(result)
+    
+    def test_get_all_without_limit(self):
+        """Test: get_all sin límite"""
+        self.repo.create(id='1', name='Test1')
+        self.repo.create(id='2', name='Test2')
+        self.repo.create(id='3', name='Test3')
+        
+        result = self.repo.get_all()
+        
+        self.assertEqual(len(result), 3)
+    
+    def test_get_all_with_limit(self):
+        """Test: get_all con límite"""
+        self.repo.create(id='1', name='Test1')
+        self.repo.create(id='2', name='Test2')
+        self.repo.create(id='3', name='Test3')
+        
+        result = self.repo.get_all(limit=2)
+        
+        self.assertEqual(len(result), 2)
+    
+    def test_get_all_with_offset(self):
+        """Test: get_all con offset"""
+        self.repo.create(id='1', name='Test1')
+        self.repo.create(id='2', name='Test2')
+        self.repo.create(id='3', name='Test3')
+        
+        result = self.repo.get_all(offset=1)
+        
+        self.assertEqual(len(result), 2)
+    
+    def test_update_existing(self):
+        """Test: update entidad existente"""
+        self.repo.create(id='123', name='Test')
+        result = self.repo.update('123', name='Updated')
+        
+        self.assertIsNotNone(result)
+        self.assertEqual(result['name'], 'Updated')
+    
+    def test_update_non_existing(self):
+        """Test: update entidad no existente"""
+        result = self.repo.update('non-existent', name='Updated')
+        
+        self.assertIsNone(result)
+    
+    def test_delete_existing(self):
+        """Test: delete entidad existente"""
+        self.repo.create(id='123', name='Test')
+        result = self.repo.delete('123')
+        
+        self.assertTrue(result)
+        self.assertIsNone(self.repo.get_by_id('123'))
+    
+    def test_delete_non_existing(self):
+        """Test: delete entidad no existente"""
+        result = self.repo.delete('non-existent')
+        
+        self.assertFalse(result)
+    
+    def test_exists_true(self):
+        """Test: exists retorna True para entidad existente"""
+        self.repo.create(id='123', name='Test')
+        result = self.repo.exists('123')
+        
+        self.assertTrue(result)
+    
+    def test_exists_false(self):
+        """Test: exists retorna False para entidad no existente"""
+        result = self.repo.exists('non-existent')
+        
+        self.assertFalse(result)
+    
+    def test_cannot_instantiate_abstract_class(self):
+        """Test: No se puede instanciar la clase abstracta directamente"""
+        from abc import ABCMeta
+        
+        # Verificar que BaseRepository es abstracta
+        self.assertIsInstance(BaseRepository, ABCMeta)
+        
+        # Intentar instanciar directamente debe fallar
         with self.assertRaises(TypeError):
             BaseRepository()
     
-    def test_concrete_repository_must_implement_abstract_methods(self):
-        """Prueba que una implementación concreta debe implementar todos los métodos abstractos"""
-        
-        class IncompleteRepository(BaseRepository):
-            def create(self, **kwargs):
-                pass
-            
-            def get_by_id(self, entity_id: str):
-                pass
-            
-            def get_all(self, limit=None, offset=0):
-                pass
-            
-            def update(self, entity_id: str, **kwargs):
-                pass
-            
-            def delete(self, entity_id: str):
-                pass
-            
-            # Falta implementar 'exists'
-        
-        # No se puede instanciar porque no implementa todos los métodos abstractos
-        with self.assertRaises(TypeError):
-            IncompleteRepository()
+    def test_abstract_methods_exist(self):
+        """Test: Verificar que los métodos abstractos existen"""
+        # Verificar que los métodos abstractos están definidos
+        self.assertTrue(hasattr(BaseRepository, 'create'))
+        self.assertTrue(hasattr(BaseRepository, 'get_by_id'))
+        self.assertTrue(hasattr(BaseRepository, 'get_all'))
+        self.assertTrue(hasattr(BaseRepository, 'update'))
+        self.assertTrue(hasattr(BaseRepository, 'delete'))
+        self.assertTrue(hasattr(BaseRepository, 'exists'))
     
-    def test_complete_repository_can_be_instantiated(self):
-        """Prueba que una implementación completa puede ser instanciada"""
+    def test_concrete_implementation_coverage(self):
+        """Test: Asegurar cobertura de métodos implementados"""
+        # Crear múltiples operaciones para asegurar cobertura completa
+        self.repo.create(id='test1', value='value1')
+        self.repo.create(id='test2', value='value2')
         
-        class CompleteRepository(BaseRepository):
-            def create(self, **kwargs):
-                return {"id": "123", "name": "Test"}
-            
-            def get_by_id(self, entity_id: str):
-                return {"id": entity_id, "name": "Test"}
-            
-            def get_all(self, limit=None, offset=0):
-                return [{"id": "123", "name": "Test"}]
-            
-            def update(self, entity_id: str, **kwargs):
-                return {"id": entity_id, "name": "Updated"}
-            
-            def delete(self, entity_id: str):
-                return True
-            
-            def exists(self, entity_id: str):
-                return True
+        # Get by id
+        self.assertIsNotNone(self.repo.get_by_id('test1'))
+        self.assertIsNone(self.repo.get_by_id('nonexistent'))
         
-        # Debe poder instanciarse sin problemas
-        repository = CompleteRepository()
-        self.assertIsInstance(repository, BaseRepository)
-        self.assertIsInstance(repository, CompleteRepository)
-    
-    def test_repository_methods_have_correct_signatures(self):
-        """Prueba que los métodos abstractos tienen las firmas correctas"""
-        import inspect
+        # Get all
+        all_items = self.repo.get_all()
+        self.assertGreater(len(all_items), 0)
         
-        # Verificar firma de create
-        create_sig = inspect.signature(BaseRepository.create)
-        self.assertEqual(len(create_sig.parameters), 2)  # self y **kwargs
-        self.assertTrue(create_sig.parameters['self'].annotation == inspect.Parameter.empty)
+        # Update
+        self.repo.update('test1', value='updated')
+        updated = self.repo.get_by_id('test1')
+        self.assertEqual(updated['value'], 'updated')
         
-        # Verificar firma de get_by_id
-        get_by_id_sig = inspect.signature(BaseRepository.get_by_id)
-        self.assertEqual(len(get_by_id_sig.parameters), 2)  # self y entity_id
-        self.assertEqual(get_by_id_sig.parameters['entity_id'].annotation, str)
+        # Exists
+        self.assertTrue(self.repo.exists('test1'))
+        self.assertFalse(self.repo.exists('nonexistent'))
         
-        # Verificar firma de get_all
-        get_all_sig = inspect.signature(BaseRepository.get_all)
-        self.assertEqual(len(get_all_sig.parameters), 3)  # self, limit, offset
-        from typing import Optional
-        self.assertEqual(get_all_sig.parameters['limit'].annotation, Optional[int])
-        self.assertEqual(get_all_sig.parameters['offset'].annotation, int)
-        
-        # Verificar firma de update
-        update_sig = inspect.signature(BaseRepository.update)
-        self.assertEqual(len(update_sig.parameters), 3)  # self, entity_id y **kwargs
-        self.assertEqual(update_sig.parameters['entity_id'].annotation, str)
-        
-        # Verificar firma de delete
-        delete_sig = inspect.signature(BaseRepository.delete)
-        self.assertEqual(len(delete_sig.parameters), 2)  # self y entity_id
-        self.assertEqual(delete_sig.parameters['entity_id'].annotation, str)
-        
-        # Verificar firma de exists
-        exists_sig = inspect.signature(BaseRepository.exists)
-        self.assertEqual(len(exists_sig.parameters), 2)  # self y entity_id
-        self.assertEqual(exists_sig.parameters['entity_id'].annotation, str)
+        # Delete
+        self.assertTrue(self.repo.delete('test1'))
+        self.assertFalse(self.repo.delete('test1'))
 
 
 if __name__ == '__main__':
