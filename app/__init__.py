@@ -29,6 +29,7 @@ def configure_routes(app):
     from .controllers.health_controller import HealthCheckView
     from .controllers.user_controller import UserController, UserDeleteAllController, AdminUserController
     from .controllers.auth_controller import AuthController, LogoutController
+    from .controllers.assigned_client_controller import AssignedClientController
     
     api = Api(app)
     
@@ -45,3 +46,6 @@ def configure_routes(app):
     
     # Admin endpoints
     api.add_resource(AdminUserController, '/auth/admin/users')
+    
+    # Assigned clients endpoints
+    api.add_resource(AssignedClientController, '/auth/assigned-clients', '/auth/assigned-clients/<string:user_id>')
