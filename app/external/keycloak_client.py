@@ -232,6 +232,76 @@ class KeycloakClient:
         except Exception as e:
             return "Cliente"
     
+    def get_users_by_role(self, role_name: str) -> list:
+        """
+        Obtiene la lista de emails de usuarios que tienen un rol específico en Keycloak.
+        Esto es más eficiente que obtener el rol de cada usuario individualmente.
+        
+        Args:
+            role_name: Nombre del rol a buscar
+            
+        Returns:
+            Lista de emails de usuarios con ese rol
+        """
+        try:
+            token = self._get_admin_token()
+            
+            # Mapeo de nombres de roles a nombres exactos en Keycloak
+            role_name_mapping = {
+                "Administrador": "Administrador",
+                "Compras": "Compras",
+                "Ventas": "Ventas",
+                "Logistica": "Logistica",
+                "Cliente": "Cliente"
+            }
+            
+            # Normalizar el nombre del rol
+            normalized_role = role_name_mapping.get(role_name, role_name)
+            
+            # Obtener usuarios con ese rol usando la API de Keycloak
+            url = f"{self.base_url}/admin/realms/{self.realm}/roles/{normalized_role}/users"
+            headers = {
+                'Authorization': f'Bearer {token}'
+            }
+            
+            # Keycloak puede paginar los resultados, así que necesitamos obtener todos
+            all_users = []
+            first = 0
+            max_results = 100  # Keycloak permite hasta 100 por defecto
+            
+            while True:
+                params = {
+                    'first': first,
+                    'max': max_results
+                }
+                
+                response = requests.get(url, headers=headers, params=params, timeout=30)
+                response.raise_for_status()
+                
+                users = response.json()
+                if not users:
+                    break
+                
+                # Extraer emails de los usuarios
+                for user in users:
+                    if 'email' in user and user['email']:
+                        all_users.append(user['email'])
+                
+                # Si obtenemos menos resultados que el máximo, significa que ya obtuvimos todos
+                if len(users) < max_results:
+                    break
+                
+                first += max_results
+            
+            return all_users
+            
+        except requests.exceptions.RequestException as e:
+            # Si hay error, retornar lista vacía para que el sistema pueda continuar
+            # pero sin el filtro de rol optimizado
+            return []
+        except Exception as e:
+            return []
+    
     def authenticate_user(self, username: str, password: str) -> Dict[str, Any]:
         """Autentica un usuario con Keycloak y retorna el token"""
         try:

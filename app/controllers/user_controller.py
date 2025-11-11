@@ -82,6 +82,8 @@ class UserController(BaseController):
                     message="Lista de usuarios obtenida exitosamente"
                 )
                 
+        except ValidationError as e:
+            return self.error_response(str(e), 400)
         except BusinessLogicError as e:
             return self.error_response(str(e), 500)
         except Exception as e:
