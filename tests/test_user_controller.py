@@ -904,6 +904,22 @@ class TestUserControllerAdditional(unittest.TestCase):
             self.assertEqual(response['data']['pagination']['total'], 0)
             self.assertEqual(response['data']['pagination']['total_pages'], 0)
     
+    def test_get_users_list_with_invalid_role(self):
+        """Prueba GET con rol inválido debe devolver 400 Bad Request"""
+        with self.app.test_request_context('/auth/user?page=1&per_page=10&role=Admin'):
+            # Configurar mock para lanzar ValidationError
+            from app.exceptions.custom_exceptions import ValidationError
+            self.mock_user_service.get_users_summary.side_effect = ValidationError("Rol 'Admin' no válido. Roles disponibles: Administrador, Compras, Ventas, Logistica, Cliente")
+            
+            response, status_code = self.controller.get()
+            
+            self.assertEqual(status_code, 400)
+            # El error_response retorna {"error": message}, no {"message": message}
+            self.assertIn("Rol 'Admin' no válido", response.get('error', ''))
+            self.mock_user_service.get_users_summary.assert_called_once_with(
+                limit=10, offset=0, email=None, name=None, role='Admin'
+            )
+    
     def test_get_users_list_with_pagination_and_filters(self):
         """Prueba GET con paginación y filtros combinados"""
         with self.app.test_request_context('/auth/user?page=2&per_page=5&name=Hospital'):

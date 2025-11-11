@@ -601,6 +601,238 @@ class TestUserRepository(unittest.TestCase):
         self.assertEqual(result, 1)
         # Verificar que se llamó filter dos veces (una para email, otra para name)
         self.assertEqual(mock_query.filter.call_count, 2)
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_get_by_emails_success(self, mock_get_session):
+        """Prueba obtener usuarios por lista de emails exitosamente"""
+        # Configurar mocks
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Crear usuarios mock
+        db_user_1 = Mock()
+        db_user_1.id = '1'
+        db_user_1.name = 'Hospital 1'
+        db_user_1.email = 'user1@test.com'
+        db_user_1.tax_id = None
+        db_user_1.address = None
+        db_user_1.phone = None
+        db_user_1.institution_type = None
+        db_user_1.logo_filename = None
+        db_user_1.logo_url = None
+        db_user_1.specialty = None
+        db_user_1.applicant_name = None
+        db_user_1.applicant_email = None
+        db_user_1.latitude = None
+        db_user_1.longitude = None
+        db_user_1.status = None
+        db_user_1.enabled = False
+        db_user_1.created_at = datetime.now()
+        db_user_1.updated_at = datetime.now()
+        
+        db_user_2 = Mock()
+        db_user_2.id = '2'
+        db_user_2.name = 'Hospital 2'
+        db_user_2.email = 'user2@test.com'
+        db_user_2.tax_id = None
+        db_user_2.address = None
+        db_user_2.phone = None
+        db_user_2.institution_type = None
+        db_user_2.logo_filename = None
+        db_user_2.logo_url = None
+        db_user_2.specialty = None
+        db_user_2.applicant_name = None
+        db_user_2.applicant_email = None
+        db_user_2.latitude = None
+        db_user_2.longitude = None
+        db_user_2.status = None
+        db_user_2.enabled = False
+        db_user_2.created_at = datetime.now()
+        db_user_2.updated_at = datetime.now()
+        
+        # Configurar query mock
+        mock_query = Mock()
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value = mock_query
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = [db_user_1, db_user_2]
+        mock_session.query.return_value = mock_query
+        
+        # Ejecutar
+        emails = ['user1@test.com', 'user2@test.com']
+        result = self.repository.get_by_emails(emails, limit=10, offset=0)
+        
+        # Verificar
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].email, 'user1@test.com')
+        self.assertEqual(result[1].email, 'user2@test.com')
+        mock_query.filter.assert_called_once()
+        mock_query.order_by.assert_called_once()
+        mock_query.offset.assert_called_once_with(0)
+        mock_query.limit.assert_called_once_with(10)
+        mock_session.close.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_get_by_emails_empty_list(self, mock_get_session):
+        """Prueba obtener usuarios por lista de emails vacía"""
+        # Ejecutar
+        result = self.repository.get_by_emails([])
+        
+        # Verificar
+        self.assertEqual(result, [])
+        # El método verifica si la lista está vacía antes de llamar a _get_session
+        # pero el mock puede haber sido llamado durante la inicialización, así que no verificamos
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_get_by_emails_with_filters(self, mock_get_session):
+        """Prueba obtener usuarios por lista de emails con filtros adicionales"""
+        # Configurar mocks
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        db_user = Mock()
+        db_user.id = '1'
+        db_user.name = 'Hospital Test'
+        db_user.email = 'test@hospital.com'
+        db_user.tax_id = None
+        db_user.address = None
+        db_user.phone = None
+        db_user.institution_type = None
+        db_user.logo_filename = None
+        db_user.logo_url = None
+        db_user.specialty = None
+        db_user.applicant_name = None
+        db_user.applicant_email = None
+        db_user.latitude = None
+        db_user.longitude = None
+        db_user.status = None
+        db_user.enabled = False
+        db_user.created_at = datetime.now()
+        db_user.updated_at = datetime.now()
+        
+        # Configurar query mock
+        mock_query = Mock()
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value = mock_query
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = [db_user]
+        mock_session.query.return_value = mock_query
+        
+        # Ejecutar con filtros
+        emails = ['test@hospital.com']
+        result = self.repository.get_by_emails(
+            emails, limit=10, offset=0, email='test', name='Hospital'
+        )
+        
+        # Verificar
+        self.assertEqual(len(result), 1)
+        # Verificar que se aplicaron los filtros
+        self.assertEqual(mock_query.filter.call_count, 3)  # emails, email, name
+        mock_session.close.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_count_by_emails_success(self, mock_get_session):
+        """Prueba contar usuarios por lista de emails exitosamente"""
+        # Configurar mocks
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar query mock
+        mock_query = Mock()
+        mock_query.filter.return_value = mock_query
+        mock_query.count.return_value = 2
+        mock_session.query.return_value = mock_query
+        
+        # Ejecutar
+        emails = ['user1@test.com', 'user2@test.com']
+        result = self.repository.count_by_emails(emails)
+        
+        # Verificar
+        self.assertEqual(result, 2)
+        mock_query.filter.assert_called_once()
+        mock_query.count.assert_called_once()
+        mock_session.close.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_count_by_emails_empty_list(self, mock_get_session):
+        """Prueba contar usuarios por lista de emails vacía"""
+        # Ejecutar
+        result = self.repository.count_by_emails([])
+        
+        # Verificar
+        self.assertEqual(result, 0)
+        # El método verifica si la lista está vacía antes de llamar a _get_session
+        # pero el mock puede haber sido llamado durante la inicialización, así que no verificamos
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_count_by_emails_with_filters(self, mock_get_session):
+        """Prueba contar usuarios por lista de emails con filtros adicionales"""
+        # Configurar mocks
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar query mock
+        mock_query = Mock()
+        mock_query.filter.return_value = mock_query
+        mock_query.count.return_value = 1
+        mock_session.query.return_value = mock_query
+        
+        # Ejecutar con filtros
+        emails = ['test@hospital.com']
+        result = self.repository.count_by_emails(
+            emails, email='test', name='Hospital'
+        )
+        
+        # Verificar
+        self.assertEqual(result, 1)
+        # Verificar que se aplicaron los filtros
+        self.assertEqual(mock_query.filter.call_count, 3)  # emails, email, name
+        mock_query.count.assert_called_once()
+        mock_session.close.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_get_by_emails_sqlalchemy_error(self, mock_get_session):
+        """Prueba manejo de error SQLAlchemy en get_by_emails"""
+        # Configurar mocks
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar query mock para lanzar error
+        from sqlalchemy.exc import SQLAlchemyError
+        mock_query = Mock()
+        mock_query.filter.side_effect = SQLAlchemyError("Database error")
+        mock_session.query.return_value = mock_query
+        
+        # Ejecutar y verificar
+        emails = ['user1@test.com']
+        with self.assertRaises(Exception) as context:
+            self.repository.get_by_emails(emails)
+        
+        self.assertIn("Error al obtener usuarios por emails", str(context.exception))
+        mock_session.close.assert_called_once()
+    
+    @patch('app.repositories.user_repository.UserRepository._get_session')
+    def test_count_by_emails_sqlalchemy_error(self, mock_get_session):
+        """Prueba manejo de error SQLAlchemy en count_by_emails"""
+        # Configurar mocks
+        mock_session = Mock()
+        mock_get_session.return_value = mock_session
+        
+        # Configurar query mock para lanzar error
+        from sqlalchemy.exc import SQLAlchemyError
+        mock_query = Mock()
+        mock_query.filter.side_effect = SQLAlchemyError("Database error")
+        mock_session.query.return_value = mock_query
+        
+        # Ejecutar y verificar
+        emails = ['user1@test.com']
+        with self.assertRaises(Exception) as context:
+            self.repository.count_by_emails(emails)
+        
+        self.assertIn("Error al contar usuarios por emails", str(context.exception))
+        mock_session.close.assert_called_once()
 
 
 if __name__ == '__main__':

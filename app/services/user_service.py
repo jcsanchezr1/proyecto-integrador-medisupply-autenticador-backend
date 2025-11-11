@@ -199,56 +199,111 @@ class UserService(BaseService):
             raise ValueError("; ".join(errors))
     
     
+    def _validate_role(self, role: str) -> None:
+        """
+        Valida que el rol sea uno de los valores válidos de Keycloak.
+        
+        Args:
+            role: Rol a validar
+            
+        Raises:
+            ValidationError: Si el rol no es válido
+        """
+        valid_roles = self.keycloak_client.get_available_roles()
+        if role not in valid_roles:
+            raise ValidationError(f"Rol '{role}' no válido. Roles disponibles: {', '.join(valid_roles)}")
+    
     def get_users_summary(self, limit: Optional[int] = None, offset: int = 0, email: Optional[str] = None, name: Optional[str] = None, role: Optional[str] = None) -> List[dict]:
         """Obtiene un resumen de usuarios para listado con filtros opcionales"""
         try:
-            # Obtener usuarios de la base de datos con filtros de email y name
-            users = self.get_all(limit=limit, offset=offset, email=email, name=name)
-            
-            # Crear lista de resumen con roles de Keycloak
-            users_summary = []
-            for user in users:
-                user_role = self.keycloak_client.get_user_role(user.email)
+            # Si hay filtro de role, validar que sea un rol válido
+            if role:
+                self._validate_role(role)
                 
-                # Filtrar por role si se especificó (búsqueda tipo LIKE case-insensitive)
-                if role:
-                    if role.lower() not in user_role.lower():
-                        continue
+                # Usar el método optimizado: obtener emails de usuarios con ese rol desde Keycloak (una sola llamada)
+                emails_with_role = self.keycloak_client.get_users_by_role(role)
                 
-                users_summary.append({
-                    'id': user.id,
-                    'name': user.name,
-                    'email': user.email,
-                    'institution_type': user.institution_type,
-                    'phone': user.phone,
-                    'status': user.status,
-                    'role': user_role
-                })
+                if not emails_with_role:
+                    return []
+                
+                # Obtener usuarios de la BD que tienen esos emails, con filtros adicionales y paginación
+                users = self.user_repository.get_by_emails(
+                    emails=emails_with_role,
+                    limit=limit,
+                    offset=offset,
+                    email=email,
+                    name=name
+                )
+                
+                # Crear lista de resumen con roles de Keycloak
+                users_summary = []
+                for user in users:
+                    # Obtener el rol del usuario para mostrarlo (solo para los usuarios de la página actual)
+                    user_role = self.keycloak_client.get_user_role(user.email)
+                    
+                    users_summary.append({
+                        'id': user.id,
+                        'name': user.name,
+                        'email': user.email,
+                        'institution_type': user.institution_type,
+                        'phone': user.phone,
+                        'status': user.status,
+                        'role': user_role
+                    })
+                
+                return users_summary
+            else:
+                # Sin filtro de role, usar el método original
+                users = self.get_all(limit=limit, offset=offset, email=email, name=name)
+                
+                # Crear lista de resumen con roles de Keycloak
+                users_summary = []
+                for user in users:
+                    user_role = self.keycloak_client.get_user_role(user.email)
+                    
+                    users_summary.append({
+                        'id': user.id,
+                        'name': user.name,
+                        'email': user.email,
+                        'institution_type': user.institution_type,
+                        'phone': user.phone,
+                        'status': user.status,
+                        'role': user_role
+                    })
+                
+                return users_summary
             
-            return users_summary
-            
+        except ValidationError:
+            # Re-lanzar ValidationError para que se maneje correctamente en el controlador
+            raise
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener resumen de usuarios: {str(e)}")
     
     def get_users_count(self, email: Optional[str] = None, name: Optional[str] = None, role: Optional[str] = None) -> int:
         """Obtiene el total de usuarios con filtros opcionales"""
         try:
-            # Si hay filtro de role, necesitamos contar después de filtrar por Keycloak
+            # Si hay filtro de role, validar que sea un rol válido
             if role:
-                # Obtener todos los usuarios con filtros de email y name (sin límite)
-                users = self.get_all(limit=None, offset=0, email=email, name=name)
+                self._validate_role(role)
                 
-                # Contar usuarios que coinciden con el filtro de role
-                count = 0
-                for user in users:
-                    user_role = self.keycloak_client.get_user_role(user.email)
-                    if role.lower() in user_role.lower():
-                        count += 1
+                # Usar el método optimizado: obtener emails de usuarios con ese rol desde Keycloak (una sola llamada)
+                emails_with_role = self.keycloak_client.get_users_by_role(role)
                 
-                return count
+                if not emails_with_role:
+                    return 0
+                
+                # Contar usuarios de la BD que tienen esos emails, con filtros adicionales
+                return self.user_repository.count_by_emails(
+                    emails=emails_with_role,
+                    email=email,
+                    name=name
+                )
             else:
                 # Sin filtro de role, contar directamente en la base de datos
                 return self.user_repository.count_all(email=email, name=name)
+        except ValidationError:
+            # Re-lanzar ValidationError para que se maneje correctamente en el controlador
+            raise
         except Exception as e:
             raise BusinessLogicError(f"Error al contar usuarios: {str(e)}")
     
