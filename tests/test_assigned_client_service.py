@@ -53,8 +53,8 @@ class TestAssignedClientService(unittest.TestCase):
         self.assertEqual(result.seller_id, seller_id)
         self.assertEqual(result.client_id, client_id)
         self.mock_assigned_client_repo.create.assert_called_once()
-        # Verificar que se actualizó el campo enabled del cliente
-        self.mock_user_repo.update.assert_called_once_with(client_id, enabled=True)
+        # Verificar que se actualizó el campo enabled y status del cliente
+        self.mock_user_repo.update.assert_called_once_with(client_id, enabled=True, status='APROBADO')
     
     def test_create_with_missing_seller_id(self):
         """Test: Crear asignación sin seller_id debe lanzar ValidationError"""

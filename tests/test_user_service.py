@@ -351,8 +351,8 @@ class TestUserService(unittest.TestCase):
         """Prueba obtener resumen de usuarios exitosamente"""
         # Configurar mock
         mock_users = [
-            User(id='1', name='Hospital 1', email='h1@test.com'),
-            User(id='2', name='Hospital 2', email='h2@test.com')
+            User(id='1', name='Hospital 1', email='h1@test.com', status='APROBADO'),
+            User(id='2', name='Hospital 2', email='h2@test.com', status='RECHAZADO')
         ]
         self.mock_user_repository.get_all.return_value = mock_users
         
@@ -364,6 +364,8 @@ class TestUserService(unittest.TestCase):
         self.assertEqual(result[0]['id'], '1')
         self.assertEqual(result[0]['name'], 'Hospital 1')
         self.assertEqual(result[0]['email'], 'h1@test.com')
+        self.assertEqual(result[0]['status'], 'APROBADO')
+        self.assertEqual(result[1]['status'], 'RECHAZADO')
     
     def test_get_users_summary_business_logic_error(self):
         """Prueba obtener resumen de usuarios con error"""
@@ -920,6 +922,54 @@ class TestUserService(unittest.TestCase):
         
         # Verificar
         self.assertEqual(result, 1)
+    
+    def test_reject_user_success(self):
+        """Prueba rechazar usuario exitosamente"""
+        # Configurar mocks
+        user_id = '123e4567-e89b-12d3-a456-426614174000'
+        mock_user = User(id=user_id, name='Test Hospital', email='test@hospital.com', status=None)
+        updated_user = User(id=user_id, name='Test Hospital', email='test@hospital.com', status='RECHAZADO')
+        
+        self.mock_user_repository.get_by_id.return_value = mock_user
+        self.mock_user_repository.update.return_value = updated_user
+        
+        # Ejecutar
+        result = self.service.reject_user(user_id)
+        
+        # Verificar
+        self.assertIsInstance(result, User)
+        self.assertEqual(result.status, 'RECHAZADO')
+        self.mock_user_repository.get_by_id.assert_called_once_with(user_id)
+        self.mock_user_repository.update.assert_called_once_with(user_id, status='RECHAZADO')
+    
+    def test_reject_user_not_found(self):
+        """Prueba rechazar usuario inexistente"""
+        # Configurar mock
+        user_id = 'non-existent-id'
+        self.mock_user_repository.get_by_id.return_value = None
+        
+        # Ejecutar y verificar
+        with self.assertRaises(ValidationError) as context:
+            self.service.reject_user(user_id)
+        
+        self.assertIn("No se encontró el usuario", str(context.exception))
+        self.mock_user_repository.get_by_id.assert_called_once_with(user_id)
+        self.mock_user_repository.update.assert_not_called()
+    
+    def test_reject_user_repository_error(self):
+        """Prueba rechazar usuario con error en repositorio"""
+        # Configurar mocks
+        user_id = '123e4567-e89b-12d3-a456-426614174000'
+        mock_user = User(id=user_id, name='Test Hospital', email='test@hospital.com')
+        
+        self.mock_user_repository.get_by_id.return_value = mock_user
+        self.mock_user_repository.update.side_effect = Exception("Database error")
+        
+        # Ejecutar y verificar
+        with self.assertRaises(BusinessLogicError) as context:
+            self.service.reject_user(user_id)
+        
+        self.assertIn("Error al rechazar usuario", str(context.exception))
 
 
 if __name__ == '__main__':

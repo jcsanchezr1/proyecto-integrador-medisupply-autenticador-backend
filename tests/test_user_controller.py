@@ -10,7 +10,7 @@ from flask import Flask
 # Agregar el directorio padre al path para importar la app
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from app.controllers.user_controller import UserController, UserDeleteAllController, AdminUserController
+from app.controllers.user_controller import UserController, UserDeleteAllController, AdminUserController, UserRejectController
 from app.exceptions.custom_exceptions import ValidationError, BusinessLogicError, NotFoundError
 
 
@@ -927,6 +927,120 @@ class TestUserControllerAdditional(unittest.TestCase):
             self.mock_user_service.get_users_summary.assert_called_once_with(
                 limit=5, offset=5, email=None, name='Hospital', role=None
             )
+
+
+class TestUserRejectController(unittest.TestCase):
+    """Pruebas para UserRejectController"""
+    
+    def setUp(self):
+        """Configuración inicial para cada prueba"""
+        self.app = Flask(__name__)
+        self.app.config['TESTING'] = True
+        self.mock_user_service = Mock()
+        self.controller = UserRejectController(user_service=self.mock_user_service)
+    
+    def test_init_with_user_service(self):
+        """Prueba que el controlador se inicializa con el servicio de usuario"""
+        self.assertEqual(self.controller.user_service, self.mock_user_service)
+    
+    def test_init_without_user_service(self):
+        """Prueba que el controlador se inicializa sin servicio de usuario"""
+        with patch('app.controllers.user_controller.UserService') as mock_service:
+            controller = UserRejectController()
+            self.assertIsNotNone(controller.user_service)
+    
+    def test_post_reject_user_success(self):
+        """Prueba rechazar usuario exitosamente"""
+        # Configurar mock
+        user_id = '123e4567-e89b-12d3-a456-426614174000'
+        mock_user = Mock()
+        mock_user.to_dict.return_value = {
+            "id": user_id,
+            "name": "Test Hospital",
+            "status": "RECHAZADO"
+        }
+        self.mock_user_service.reject_user.return_value = mock_user
+        
+        # Ejecutar
+        response, status_code = self.controller.post(user_id=user_id)
+        
+        # Verificar
+        self.assertEqual(status_code, 200)
+        self.assertEqual(response["message"], "Usuario rechazado exitosamente")
+        self.assertEqual(response["data"]["status"], "RECHAZADO")
+        self.mock_user_service.reject_user.assert_called_once_with(user_id)
+    
+    def test_post_reject_user_empty_id(self):
+        """Prueba rechazar usuario con ID vacío"""
+        # Ejecutar
+        response, status_code = self.controller.post(user_id='')
+        
+        # Verificar
+        self.assertEqual(status_code, 400)
+        self.assertEqual(response["error"], "El parámetro 'user_id' es obligatorio")
+        self.mock_user_service.reject_user.assert_not_called()
+    
+    def test_post_reject_user_not_found(self):
+        """Prueba rechazar usuario inexistente"""
+        # Configurar mock
+        user_id = 'non-existent-id'
+        self.mock_user_service.reject_user.side_effect = ValidationError("No se encontró el usuario con ID: non-existent-id")
+        
+        # Ejecutar
+        response, status_code = self.controller.post(user_id=user_id)
+        
+        # Verificar
+        self.assertEqual(status_code, 404)
+        self.assertIn("No se encontró el usuario", response["error"])
+        self.mock_user_service.reject_user.assert_called_once_with(user_id)
+    
+    def test_post_reject_user_business_logic_error(self):
+        """Prueba rechazar usuario con error de lógica de negocio"""
+        # Configurar mock
+        user_id = '123e4567-e89b-12d3-a456-426614174000'
+        self.mock_user_service.reject_user.side_effect = BusinessLogicError("Error al rechazar usuario")
+        
+        # Ejecutar
+        response, status_code = self.controller.post(user_id=user_id)
+        
+        # Verificar
+        self.assertEqual(status_code, 500)
+        self.assertEqual(response["error"], "Error al rechazar usuario")
+        self.mock_user_service.reject_user.assert_called_once_with(user_id)
+    
+    def test_post_reject_user_returns_none(self):
+        """Prueba rechazar usuario cuando el servicio retorna None"""
+        # Configurar mock
+        user_id = '123e4567-e89b-12d3-a456-426614174000'
+        self.mock_user_service.reject_user.return_value = None
+        
+        # Ejecutar
+        response, status_code = self.controller.post(user_id=user_id)
+        
+        # Verificar
+        self.assertEqual(status_code, 500)
+        self.assertEqual(response["error"], "No se pudo rechazar el usuario")
+        self.mock_user_service.reject_user.assert_called_once_with(user_id)
+    
+    def test_post_reject_user_strips_whitespace(self):
+        """Prueba rechazar usuario con espacios en blanco en el ID"""
+        # Configurar mock
+        user_id = '  123e4567-e89b-12d3-a456-426614174000  '
+        mock_user = Mock()
+        mock_user.to_dict.return_value = {
+            "id": user_id.strip(),
+            "name": "Test Hospital",
+            "status": "RECHAZADO"
+        }
+        self.mock_user_service.reject_user.return_value = mock_user
+        
+        # Ejecutar
+        response, status_code = self.controller.post(user_id=user_id)
+        
+        # Verificar
+        self.assertEqual(status_code, 200)
+        # Verificar que se llamó con el ID sin espacios
+        self.mock_user_service.reject_user.assert_called_once_with(user_id.strip())
 
 
 if __name__ == '__main__':

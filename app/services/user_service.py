@@ -89,6 +89,23 @@ class UserService(BaseService):
         except Exception as e:
             raise BusinessLogicError(f"Error al eliminar todos los usuarios: {str(e)}")
     
+    def reject_user(self, user_id: str) -> Optional[User]:
+        """Rechaza un usuario actualizando su status a RECHAZADO"""
+        try:
+            # Verificar que el usuario existe
+            user = self.user_repository.get_by_id(user_id)
+            if not user:
+                raise ValidationError(f"No se encontró el usuario con ID: {user_id}")
+            
+            # Actualizar el status a RECHAZADO
+            updated_user = self.user_repository.update(user_id, status='RECHAZADO')
+            
+            return updated_user
+        except ValidationError as e:
+            raise e
+        except Exception as e:
+            raise BusinessLogicError(f"Error al rechazar usuario: {str(e)}")
+    
     def validate_business_rules(self, **kwargs) -> None:
         """Valida las reglas de negocio específicas para usuarios"""
         errors = []
@@ -204,6 +221,7 @@ class UserService(BaseService):
                     'email': user.email,
                     'institution_type': user.institution_type,
                     'phone': user.phone,
+                    'status': user.status,
                     'role': user_role
                 })
             

@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "d66afb03-af48-4c83-a47c-790da58e577f",
+		"_postman_id": "d0fac2f0-a33b-4b11-9eeb-bdb43e0c50ab",
 		"name": "MediSupply Autenticador API",
 		"description": "Colección de endpoints para el servicio de autenticación MediSupply con automatización de pruebas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-d66afb03-af48-4c83-a47c-790da58e577f?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-d0fac2f0-a33b-4b11-9eeb-bdb43e0c50ab?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -974,62 +974,39 @@
 			"response": []
 		},
 		{
-			"name": "Auth Token - Exitoso",
+			"name": "Auth Token Cliente - Cuenta deshabilitada",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// Validar respuesta exitosa de autenticación",
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
+							"// Validar respuesta de error de autenticación",
+							"pm.test(\"Status code is 401\", function () {",
+							"    pm.response.to.have.status(401);",
 							"});",
 							"",
-							"pm.test(\"Response has access_token\", function () {",
+							"pm.test(\"Response has error\", function () {",
 							"    const responseJson = pm.response.json();",
-							"    pm.expect(responseJson).to.have.property('access_token');",
-							"    pm.expect(responseJson.access_token).to.be.a('string');",
-							"    pm.expect(responseJson.access_token).to.not.be.empty;",
+							"    pm.expect(responseJson).to.have.property('error');",
 							"});",
 							"",
-							"pm.test(\"Response has token_type\", function () {",
+							"pm.test(\"Error contains invalid_grant\", function () {",
 							"    const responseJson = pm.response.json();",
-							"    pm.expect(responseJson).to.have.property('token_type');",
-							"    pm.expect(responseJson.token_type).to.eql('Bearer');",
-							"});",
-							"",
-							"pm.test(\"Response has expires_in\", function () {",
-							"    const responseJson = pm.response.json();",
-							"    pm.expect(responseJson).to.have.property('expires_in');",
-							"    pm.expect(responseJson.expires_in).to.be.a('number');",
-							"    pm.expect(responseJson.expires_in).to.be.above(0);",
-							"});",
-							"",
-							"pm.test(\"Response has refresh_token\", function () {",
-							"    const responseJson = pm.response.json();",
-							"    pm.expect(responseJson).to.have.property('refresh_token');",
-							"    pm.expect(responseJson.refresh_token).to.be.a('string');",
-							"    pm.expect(responseJson.refresh_token).to.not.be.empty;",
+							"    if (responseJson.error && typeof responseJson.error === 'object') {",
+							"        pm.expect(responseJson.error).to.have.property('error');",
+							"        pm.expect(responseJson.error.error).to.eql('invalid_grant');",
+							"    } else {",
+							"        pm.expect(responseJson.error).to.include('La cuenta no está habilitada. Contacte al administrador');",
+							"    }",
 							"});",
 							"",
 							"pm.test(\"Response time is less than 5000ms\", function () {",
 							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
-							"});",
-							"",
-							"// Guardar tokens para uso posterior",
-							"const responseJson = pm.response.json();",
-							"if (responseJson && responseJson.access_token) {",
-							"    pm.globals.set('auth_token', responseJson.access_token);",
-							"    console.log('Token de autenticación guardado');",
-							"}",
-							"",
-							"// Guardar refresh_token para logout",
-							"if (responseJson && responseJson.refresh_token) {",
-							"    pm.globals.set('refresh_token', responseJson.refresh_token);",
-							"    console.log('Refresh token guardado para logout');",
-							"}"
+							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
 					}
 				}
 			],
@@ -1060,68 +1037,7 @@
 			"response": []
 		},
 		{
-			"name": "Auth Token - Unauthorized",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Validar respuesta de error de autenticación",
-							"pm.test(\"Status code is 401\", function () {",
-							"    pm.response.to.have.status(401);",
-							"});",
-							"",
-							"pm.test(\"Response has error\", function () {",
-							"    const responseJson = pm.response.json();",
-							"    pm.expect(responseJson).to.have.property('error');",
-							"});",
-							"",
-							"pm.test(\"Error contains invalid_grant\", function () {",
-							"    const responseJson = pm.response.json();",
-							"    if (responseJson.error && typeof responseJson.error === 'object') {",
-							"        pm.expect(responseJson.error).to.have.property('error');",
-							"        pm.expect(responseJson.error.error).to.eql('invalid_grant');",
-							"    } else {",
-							"        pm.expect(responseJson.error).to.include('Credenciales inválidas');",
-							"    }",
-							"});",
-							"",
-							"pm.test(\"Response time is less than 5000ms\", function () {",
-							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"user\": \"{{created_user_email}}\",\n    \"password\": \"password_incorrecto_123\"\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/auth/token",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"auth",
-						"token"
-					]
-				},
-				"description": "Intenta autenticar con una contraseña incorrecta"
-			},
-			"response": []
-		},
-		{
-			"name": "Auth Token - Bad Request (Campos Vacíos)",
+			"name": "Auth Token Cliente - Bad Request (Campos Vacíos)",
 			"event": [
 				{
 					"listen": "test",
@@ -1178,7 +1094,7 @@
 			"response": []
 		},
 		{
-			"name": "Auth Token - Bad Request (Email Inválido)",
+			"name": "Auth Token Cliente - Bad Request (Email Inválido)",
 			"event": [
 				{
 					"listen": "test",
@@ -1231,6 +1147,69 @@
 					]
 				},
 				"description": "Intenta autenticar con un email inválido"
+			},
+			"response": []
+		},
+		{
+			"name": "Auth Token Admin - Unauthorized",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta de error de autenticación",
+							"pm.test(\"Status code is 401\", function () {",
+							"    pm.response.to.have.status(401);",
+							"});",
+							"",
+							"pm.test(\"Response has error\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('error');",
+							"});",
+							"",
+							"pm.test(\"Error contains invalid_grant\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    if (responseJson.error && typeof responseJson.error === 'object') {",
+							"        pm.expect(responseJson.error).to.have.property('error');",
+							"        pm.expect(responseJson.error.error).to.eql('invalid_grant');",
+							"    } else {",
+							"        pm.expect(responseJson.error).to.include('Credenciales inválidas');",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 5000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": \"medisupply05@gmail.com\",\n    \"password\": \"password_incorrecto_123\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/token",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"token"
+					]
+				},
+				"description": "Intenta autenticar con una contraseña incorrecta"
 			},
 			"response": []
 		},
@@ -1319,6 +1298,424 @@
 					]
 				},
 				"description": "Autentica un usuario admin usando las credenciales creadas anteriormente"
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Usuario Ventas - Exitoso",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generar datos aleatorios para el usuario admin",
+							"const timestamp = Date.now();",
+							"const randomNum = Math.floor(Math.random() * 10000);",
+							"const emailVentas = 'ventas_user_' + timestamp + '_' + randomNum + '@test-vendedor.com';",
+							"const nombreVentas = 'Ventas ' + timestamp;",
+							"",
+							"// Guardar en variables de entorno",
+							"pm.environment.set('ventas_user_email', emailVentas);",
+							"pm.environment.set('ventas_user_name', nombreVentas);",
+							"pm.environment.set('ventas_user_password', 'Password123');",
+							"pm.environment.set('ventas_user_role', 'Ventas');",
+							"",
+							"console.log('Datos generados para usuario ventas:');",
+							"console.log('Email:', emailVentas);",
+							"console.log('Nombre:', nombreVentas);",
+							"console.log('Rol:', 'Ventas');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta exitosa",
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has data field', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"// Validar campos del usuario creado",
+							"pm.test('User has required fields', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('name');",
+							"    pm.expect(jsonData.data).to.have.property('email');",
+							"    pm.expect(jsonData.data).to.have.property('role');",
+							"    pm.expect(jsonData.data).to.have.property('enabled');",
+							"    pm.expect(jsonData.data).to.have.property('created_at');",
+							"});",
+							"",
+							"// Validar que el rol sea correcto",
+							"pm.test('User role is Ventas', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.role).to.equal('Ventas');",
+							"});",
+							"",
+							"// Validar que el usuario esté habilitado",
+							"pm.test('User is enabled', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.enabled).to.be.true;",
+							"});",
+							"",
+							"// Guardar ID del usuario creado",
+							"if (pm.response.code === 201) {",
+							"    const jsonData = pm.response.json();",
+							"    pm.globals.set('ventas_created_user_id', jsonData.data.id);",
+							"    pm.globals.set('ventas_created_user_email', jsonData.data.email);",
+							"    pm.globals.set('ventas_created_user_password', jsonData.data.password);",
+							"    console.log('Usuario ventas creado con ID:', jsonData.data.id);",
+							"    console.log('Email del usuario ventas:', jsonData.data.email);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"{{ventas_user_name}}\",\n  \"email\": \"{{ventas_user_email}}\",\n  \"password\": \"{{ventas_user_password}}\",\n  \"confirm_password\": \"{{ventas_user_password}}\",\n  \"role\": \"{{ventas_user_role}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/admin/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"admin",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Asignar Cliente - Exitoso",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta exitosa",
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has data field', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"// Validar campos del usuario creado",
+							"pm.test('User has required fields', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('seller_id');",
+							"    pm.expect(jsonData.data).to.have.property('client_id');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"seller_id\": \"{{ventas_created_user_id}}\",\n  \"client_id\": \"{{created_user_id}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/assigned-clients",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"assigned-clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Asignar Cliente - Usuario Ventas No Existe - Bad Request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta exitosa",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Response has error field', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"seller_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"client_id\": \"{{created_user_id}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/assigned-clients",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"assigned-clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Asignar Cliente - Usuario Cliente No Existe - Bad Request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar respuesta exitosa",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Response has error field', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"seller_id\": \"{{ventas_created_user_id}}\",\n  \"client_id\": \"00000000-0000-0000-0000-000000000000\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/assigned-clients",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"assigned-clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Clientes Asignados - Exitoso",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar listado de usuarios",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has correct structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('seller_id');",
+							"    pm.expect(jsonData.data).to.have.property('assigned_clients');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/auth/assigned-clients/{{ventas_created_user_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"assigned-clients",
+						"{{ventas_created_user_id}}"
+					]
+				},
+				"description": "Obtener lista de usuarios con paginación"
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Clientes Asignados - Not Found - Usuario Ventas no Existe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar listado de usuarios",
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test(\"Response is JSON\", function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response has correct structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/auth/assigned-clients/00000000-0000-0000-0000-000000000000",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"assigned-clients",
+						"00000000-0000-0000-0000-000000000000"
+					]
+				},
+				"description": "Obtener lista de usuarios con paginación"
 			},
 			"response": []
 		},
@@ -2228,120 +2625,7 @@
 			"response": []
 		},
 		{
-			"name": "Crear Usuario Ventas - Exitoso",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"// Generar datos aleatorios para el usuario admin",
-							"const timestamp = Date.now();",
-							"const randomNum = Math.floor(Math.random() * 10000);",
-							"const emailVentas = 'ventas_user_' + timestamp + '_' + randomNum + '@test-vendedor.com';",
-							"const nombreVentas = 'Ventas ' + timestamp;",
-							"",
-							"// Guardar en variables de entorno",
-							"pm.environment.set('ventas_user_email', emailVentas);",
-							"pm.environment.set('ventas_user_name', nombreVentas);",
-							"pm.environment.set('ventas_user_password', 'Password123');",
-							"pm.environment.set('ventas_user_role', 'Ventas');",
-							"",
-							"console.log('Datos generados para usuario ventas:');",
-							"console.log('Email:', emailVentas);",
-							"console.log('Nombre:', nombreVentas);",
-							"console.log('Rol:', 'Ventas');"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Validar respuesta exitosa",
-							"pm.test('Status code is 201', function () {",
-							"    pm.response.to.have.status(201);",
-							"});",
-							"",
-							"pm.test('Response has data field', function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData).to.have.property('data');",
-							"});",
-							"",
-							"// Validar campos del usuario creado",
-							"pm.test('User has required fields', function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData.data).to.have.property('id');",
-							"    pm.expect(jsonData.data).to.have.property('name');",
-							"    pm.expect(jsonData.data).to.have.property('email');",
-							"    pm.expect(jsonData.data).to.have.property('role');",
-							"    pm.expect(jsonData.data).to.have.property('enabled');",
-							"    pm.expect(jsonData.data).to.have.property('created_at');",
-							"});",
-							"",
-							"// Validar que el rol sea correcto",
-							"pm.test('User role is Ventas', function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData.data.role).to.equal('Ventas');",
-							"});",
-							"",
-							"// Validar que el usuario esté habilitado",
-							"pm.test('User is enabled', function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData.data.enabled).to.be.true;",
-							"});",
-							"",
-							"// Guardar ID del usuario creado",
-							"if (pm.response.code === 201) {",
-							"    const jsonData = pm.response.json();",
-							"    pm.globals.set('ventas_created_user_id', jsonData.data.id);",
-							"    pm.globals.set('ventas_created_user_email', jsonData.data.email);",
-							"    pm.globals.set('ventas_created_user_password', jsonData.data.password);",
-							"    console.log('Usuario ventas creado con ID:', jsonData.data.id);",
-							"    console.log('Email del usuario ventas:', jsonData.data.email);",
-							"}"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Authorization",
-						"value": "Bearer {{auth_token}}",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"name\": \"{{ventas_user_name}}\",\n  \"email\": \"{{ventas_user_email}}\",\n  \"password\": \"{{ventas_user_password}}\",\n  \"confirm_password\": \"{{ventas_user_password}}\",\n  \"role\": \"{{ventas_user_role}}\"\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/auth/admin/users",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"auth",
-						"admin",
-						"users"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Asignar Cliente - Exitoso",
+			"name": "Rechazar Cliente - Exitoso",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -2359,8 +2643,8 @@
 					"script": {
 						"exec": [
 							"// Validar respuesta exitosa",
-							"pm.test('Status code is 201', function () {",
-							"    pm.response.to.have.status(201);",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
 							"});",
 							"",
 							"pm.test('Response has data field', function () {",
@@ -2372,8 +2656,6 @@
 							"pm.test('User has required fields', function () {",
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData.data).to.have.property('id');",
-							"    pm.expect(jsonData.data).to.have.property('seller_id');",
-							"    pm.expect(jsonData.data).to.have.property('client_id');",
 							"});"
 						],
 						"type": "text/javascript",
@@ -2400,20 +2682,22 @@
 					"raw": "{\n  \"seller_id\": \"{{ventas_created_user_id}}\",\n  \"client_id\": \"{{created_user_id}}\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/auth/assigned-clients",
+					"raw": "{{base_url}}/auth/user/reject/{{created_user_id}}",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"auth",
-						"assigned-clients"
+						"user",
+						"reject",
+						"{{created_user_id}}"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Asignar Cliente - Usuario Ventas No Existe - Bad Request",
+			"name": "Rechazar Cliente - No Existe",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -2431,186 +2715,11 @@
 					"script": {
 						"exec": [
 							"// Validar respuesta exitosa",
-							"pm.test('Status code is 400', function () {",
-							"    pm.response.to.have.status(400);",
-							"});",
-							"",
-							"pm.test('Response has error field', function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData).to.have.property('error');",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Authorization",
-						"value": "Bearer {{auth_token}}",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"seller_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"client_id\": \"{{created_user_id}}\"\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/auth/assigned-clients",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"auth",
-						"assigned-clients"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Asignar Cliente - Usuario Cliente No Existe - Bad Request",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Validar respuesta exitosa",
-							"pm.test('Status code is 400', function () {",
-							"    pm.response.to.have.status(400);",
-							"});",
-							"",
-							"pm.test('Response has error field', function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData).to.have.property('error');",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Authorization",
-						"value": "Bearer {{auth_token}}",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"seller_id\": \"{{ventas_created_user_id}}\",\n  \"client_id\": \"00000000-0000-0000-0000-000000000000\"\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/auth/assigned-clients",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"auth",
-						"assigned-clients"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Listar Clientes Asignados - Exitoso",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Validar listado de usuarios",
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response is JSON\", function () {",
-							"    pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response has correct structure\", function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData).to.have.property('message');",
-							"    pm.expect(jsonData).to.have.property('data');",
-							"    pm.expect(jsonData.data).to.have.property('seller_id');",
-							"    pm.expect(jsonData.data).to.have.property('assigned_clients');",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{auth_token}}",
-						"type": "text"
-					}
-				],
-				"url": {
-					"raw": "{{base_url}}/auth/assigned-clients/{{ventas_created_user_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"auth",
-						"assigned-clients",
-						"{{ventas_created_user_id}}"
-					]
-				},
-				"description": "Obtener lista de usuarios con paginación"
-			},
-			"response": []
-		},
-		{
-			"name": "Listar Clientes Asignados - Not Found - Usuario Ventas no Existe",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Validar listado de usuarios",
-							"pm.test(\"Status code is 404\", function () {",
+							"pm.test('Status code is 404', function () {",
 							"    pm.response.to.have.status(404);",
 							"});",
 							"",
-							"pm.test(\"Response is JSON\", function () {",
-							"    pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response has correct structure\", function () {",
+							"pm.test('Response has data field', function () {",
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('error');",
 							"});"
@@ -2622,26 +2731,34 @@
 				}
 			],
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
 					{
 						"key": "Authorization",
 						"value": "Bearer {{auth_token}}",
 						"type": "text"
 					}
 				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"seller_id\": \"{{ventas_created_user_id}}\",\n  \"client_id\": \"{{created_user_id}}\"\n}"
+				},
 				"url": {
-					"raw": "{{base_url}}/auth/assigned-clients/00000000-0000-0000-0000-000000000000",
+					"raw": "{{base_url}}/auth/user/reject/00000000-0000-0000-0000-000000000000",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"auth",
-						"assigned-clients",
+						"user",
+						"reject",
 						"00000000-0000-0000-0000-000000000000"
 					]
-				},
-				"description": "Obtener lista de usuarios con paginación"
+				}
 			},
 			"response": []
 		},

@@ -30,10 +30,10 @@ class AssignedClientService(BaseService):
             # Crear asignación
             assigned_client = self.assigned_client_repository.create(**kwargs)
             
-            # Actualizar el campo enabled del cliente a True
+            # Actualizar el campo enabled del cliente a True y status a APROBADO
             client_id = kwargs.get('client_id')
             if client_id:
-                self.user_repository.update(client_id, enabled=True)
+                self.user_repository.update(client_id, enabled=True, status='APROBADO')
             
             return assigned_client
             
