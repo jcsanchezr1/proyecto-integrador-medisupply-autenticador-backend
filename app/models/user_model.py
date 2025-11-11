@@ -27,6 +27,7 @@ class User(BaseModel):
         self.applicant_email = kwargs.get('applicant_email', '')
         self.latitude = kwargs.get('latitude', None)
         self.longitude = kwargs.get('longitude', None)
+        self.status = kwargs.get('status', None)
         self.password = kwargs.get('password', '')
         self.confirm_password = kwargs.get('confirm_password', '')
         self.role = kwargs.get('role', '')
@@ -52,6 +53,7 @@ class User(BaseModel):
             'applicant_email': self.applicant_email,
             'latitude': self.latitude,
             'longitude': self.longitude,
+            'status': self.status,
             'enabled': self.enabled,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None

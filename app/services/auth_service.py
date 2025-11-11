@@ -42,6 +42,10 @@ class AuthService:
         if not user:
             raise BusinessLogicError("Credenciales inválidas")
         
+        # Verificar que el usuario esté habilitado
+        if not user.enabled:
+            raise BusinessLogicError("La cuenta no está habilitada. Contacte al administrador")
+        
         # Autenticar con Keycloak
         auth_result = self.keycloak_client.authenticate_user(user_email, password)
         
