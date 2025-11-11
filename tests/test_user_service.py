@@ -806,39 +806,47 @@ class TestUserService(unittest.TestCase):
     def test_get_users_summary_with_role_filter(self):
         """Prueba obtener resumen de usuarios con filtro de rol"""
         # Configurar mocks
+        # Simular que Keycloak retorna emails de usuarios con rol 'Administrador'
+        self.mock_keycloak_client.get_users_by_role.return_value = ['h1@test.com']
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        
+        # Simular usuarios obtenidos de la BD
         mock_users = [
-            User(id='1', name='Hospital 1', email='h1@test.com'),
-            User(id='2', name='Hospital 2', email='h2@test.com'),
-            User(id='3', name='Hospital 3', email='h3@test.com')
+            User(id='1', name='Hospital 1', email='h1@test.com')
         ]
-        self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_user_repository.get_by_emails.return_value = mock_users
         
-        # Simular diferentes roles
-        def get_role_side_effect(email):
-            if email == 'h1@test.com':
-                return 'Administrador'
-            elif email == 'h2@test.com':
-                return 'Cliente'
-            else:
-                return 'Compras'
-        
-        self.mock_keycloak_client.get_user_role.side_effect = get_role_side_effect
+        # Simular obtener el rol del usuario
+        self.mock_keycloak_client.get_user_role.return_value = 'Administrador'
         
         # Ejecutar
-        result = self.service.get_users_summary(limit=10, offset=0, role='Admin')
+        result = self.service.get_users_summary(limit=10, offset=0, role='Administrador')
         
         # Verificar - solo debe devolver el que tiene rol 'Administrador'
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['email'], 'h1@test.com')
         self.assertEqual(result[0]['role'], 'Administrador')
+        self.mock_keycloak_client.get_users_by_role.assert_called_once_with('Administrador')
+        self.mock_user_repository.get_by_emails.assert_called_once_with(
+            emails=['h1@test.com'],
+            limit=10,
+            offset=0,
+            email=None,
+            name=None
+        )
     
     def test_get_users_summary_with_all_filters(self):
         """Prueba obtener resumen de usuarios con todos los filtros"""
         # Configurar mocks
+        # Simular que Keycloak retorna emails de usuarios con rol 'Cliente'
+        self.mock_keycloak_client.get_users_by_role.return_value = ['test@hospital.com']
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        
+        # Simular usuarios obtenidos de la BD
         mock_users = [
             User(id='1', name='Hospital Test', email='test@hospital.com')
         ]
-        self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_user_repository.get_by_emails.return_value = mock_users
         self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
         
         # Ejecutar
@@ -850,21 +858,29 @@ class TestUserService(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], 'Hospital Test')
         self.assertEqual(result[0]['role'], 'Cliente')
+        self.mock_keycloak_client.get_users_by_role.assert_called_once_with('Cliente')
+        self.mock_user_repository.get_by_emails.assert_called_once_with(
+            emails=['test@hospital.com'],
+            limit=10,
+            offset=0,
+            email='test',
+            name='Hospital'
+        )
     
     def test_get_users_summary_role_filter_no_match(self):
         """Prueba obtener resumen de usuarios con filtro de rol que no coincide"""
         # Configurar mocks
-        mock_users = [
-            User(id='1', name='Hospital Test', email='test@hospital.com')
-        ]
-        self.mock_user_repository.get_all.return_value = mock_users
-        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
+        # Simular que Keycloak no retorna usuarios con rol 'Administrador'
+        self.mock_keycloak_client.get_users_by_role.return_value = []
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
         
         # Ejecutar
         result = self.service.get_users_summary(limit=10, offset=0, role='Administrador')
         
         # Verificar - no debe devolver ningún usuario
         self.assertEqual(len(result), 0)
+        self.mock_keycloak_client.get_users_by_role.assert_called_once_with('Administrador')
+        self.mock_user_repository.get_by_emails.assert_not_called()
     
     def test_get_users_count_without_role_filter(self):
         """Prueba contar usuarios sin filtro de rol"""
@@ -881,47 +897,104 @@ class TestUserService(unittest.TestCase):
     def test_get_users_count_with_role_filter(self):
         """Prueba contar usuarios con filtro de rol"""
         # Configurar mocks
-        mock_users = [
-            User(id='1', name='Hospital 1', email='h1@test.com'),
-            User(id='2', name='Hospital 2', email='h2@test.com'),
-            User(id='3', name='Hospital 3', email='h3@test.com')
-        ]
-        self.mock_user_repository.get_all.return_value = mock_users
+        # Simular que Keycloak retorna emails de usuarios con rol 'Cliente'
+        self.mock_keycloak_client.get_users_by_role.return_value = ['h2@test.com', 'h3@test.com']
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
         
-        # Simular diferentes roles
-        def get_role_side_effect(email):
-            if email == 'h1@test.com':
-                return 'Administrador'
-            elif email == 'h2@test.com':
-                return 'Cliente'
-            else:
-                return 'Cliente'
-        
-        self.mock_keycloak_client.get_user_role.side_effect = get_role_side_effect
+        # Simular contar usuarios en la BD
+        self.mock_user_repository.count_by_emails.return_value = 2
         
         # Ejecutar
         result = self.service.get_users_count(role='Cliente')
         
         # Verificar - debe contar 2 usuarios con rol 'Cliente'
         self.assertEqual(result, 2)
-        self.mock_user_repository.get_all.assert_called_once_with(
-            limit=None, offset=0, email=None, name=None
+        self.mock_keycloak_client.get_users_by_role.assert_called_once_with('Cliente')
+        self.mock_user_repository.count_by_emails.assert_called_once_with(
+            emails=['h2@test.com', 'h3@test.com'],
+            email=None,
+            name=None
         )
     
     def test_get_users_count_with_all_filters(self):
         """Prueba contar usuarios con todos los filtros"""
         # Configurar mocks
-        mock_users = [
-            User(id='1', name='Hospital Test', email='test@hospital.com')
-        ]
-        self.mock_user_repository.get_all.return_value = mock_users
-        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
+        # Simular que Keycloak retorna emails de usuarios con rol 'Cliente'
+        self.mock_keycloak_client.get_users_by_role.return_value = ['test@hospital.com']
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        
+        # Simular contar usuarios en la BD
+        self.mock_user_repository.count_by_emails.return_value = 1
         
         # Ejecutar
         result = self.service.get_users_count(email='test', name='Hospital', role='Cliente')
         
         # Verificar
         self.assertEqual(result, 1)
+        self.mock_keycloak_client.get_users_by_role.assert_called_once_with('Cliente')
+        self.mock_user_repository.count_by_emails.assert_called_once_with(
+            emails=['test@hospital.com'],
+            email='test',
+            name='Hospital'
+        )
+    
+    def test_get_users_summary_with_invalid_role(self):
+        """Prueba obtener resumen de usuarios con rol inválido"""
+        # Configurar mocks
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        
+        # Ejecutar y verificar que lanza ValidationError
+        with self.assertRaises(ValidationError) as context:
+            self.service.get_users_summary(limit=10, offset=0, role='Admin')
+        
+        # Verificar el mensaje de error
+        self.assertIn("Rol 'Admin' no válido", str(context.exception))
+        self.assertIn("Roles disponibles", str(context.exception))
+        # No debe llamar a get_users_by_role si el rol es inválido
+        self.mock_keycloak_client.get_users_by_role.assert_not_called()
+    
+    def test_get_users_count_with_invalid_role(self):
+        """Prueba contar usuarios con rol inválido"""
+        # Configurar mocks
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        
+        # Ejecutar y verificar que lanza ValidationError
+        with self.assertRaises(ValidationError) as context:
+            self.service.get_users_count(role='InvalidRole')
+        
+        # Verificar el mensaje de error
+        self.assertIn("Rol 'InvalidRole' no válido", str(context.exception))
+        self.assertIn("Roles disponibles", str(context.exception))
+        # No debe llamar a get_users_by_role si el rol es inválido
+        self.mock_keycloak_client.get_users_by_role.assert_not_called()
+    
+    def test_validate_role_valid_roles(self):
+        """Prueba validar roles válidos"""
+        # Configurar mocks
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        
+        # Ejecutar con cada rol válido - no debe lanzar excepción
+        valid_roles = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        for role in valid_roles:
+            try:
+                self.service._validate_role(role)
+            except ValidationError:
+                self.fail(f"_validate_role() lanzó ValidationError para rol válido: {role}")
+    
+    def test_validate_role_invalid_role(self):
+        """Prueba validar rol inválido"""
+        # Configurar mocks
+        self.mock_keycloak_client.get_available_roles.return_value = ["Administrador", "Compras", "Ventas", "Logistica", "Cliente"]
+        
+        # Ejecutar con rol inválido y verificar que lanza ValidationError
+        invalid_roles = ["Admin", "InvalidRole", "admin", "ADMINISTRADOR", ""]
+        for role in invalid_roles:
+            with self.assertRaises(ValidationError) as context:
+                self.service._validate_role(role)
+            
+            # Verificar el mensaje de error
+            self.assertIn(f"Rol '{role}' no válido", str(context.exception))
+            self.assertIn("Roles disponibles", str(context.exception))
     
     def test_reject_user_success(self):
         """Prueba rechazar usuario exitosamente"""

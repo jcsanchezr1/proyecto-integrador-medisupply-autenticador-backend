@@ -202,6 +202,79 @@ class UserRepository(BaseRepository):
         finally:
             session.close()
     
+    def get_by_emails(self, emails: List[str], limit: Optional[int] = None, offset: int = 0, email: Optional[str] = None, name: Optional[str] = None) -> List[User]:
+        """
+        Obtiene usuarios por una lista de emails con filtros opcionales y paginación.
+        Útil cuando se necesita filtrar usuarios que tienen un rol específico en Keycloak.
+        
+        Args:
+            emails: Lista de emails a buscar
+            limit: Límite de resultados
+            offset: Offset para paginación
+            email: Filtro opcional de email (LIKE)
+            name: Filtro opcional de nombre (LIKE)
+            
+        Returns:
+            Lista de usuarios que coinciden con los criterios
+        """
+        session = self._get_session()
+        try:
+            if not emails:
+                return []
+            
+            query = session.query(UserDB).filter(UserDB.email.in_(emails))
+            
+            # Aplicar filtros opcionales usando LIKE
+            if email:
+                query = query.filter(UserDB.email.ilike(f'%{email}%'))
+            
+            if name:
+                query = query.filter(UserDB.name.ilike(f'%{name}%'))
+            
+            # Ordenar y aplicar paginación
+            query = query.order_by(UserDB.name.asc()).offset(offset)
+            if limit:
+                query = query.limit(limit)
+            
+            db_users = query.all()
+            return [self._db_to_model(db_user) for db_user in db_users]
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener usuarios por emails: {str(e)}")
+        finally:
+            session.close()
+    
+    def count_by_emails(self, emails: List[str], email: Optional[str] = None, name: Optional[str] = None) -> int:
+        """
+        Cuenta usuarios por una lista de emails con filtros opcionales.
+        
+        Args:
+            emails: Lista de emails a buscar
+            email: Filtro opcional de email (LIKE)
+            name: Filtro opcional de nombre (LIKE)
+            
+        Returns:
+            Cantidad de usuarios que coinciden con los criterios
+        """
+        session = self._get_session()
+        try:
+            if not emails:
+                return 0
+            
+            query = session.query(UserDB).filter(UserDB.email.in_(emails))
+            
+            # Aplicar filtros opcionales usando LIKE
+            if email:
+                query = query.filter(UserDB.email.ilike(f'%{email}%'))
+            
+            if name:
+                query = query.filter(UserDB.name.ilike(f'%{name}%'))
+            
+            return query.count()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al contar usuarios por emails: {str(e)}")
+        finally:
+            session.close()
+    
     def update(self, user_id: str, **kwargs) -> Optional[User]:
         """Actualiza un usuario"""
         session = self._get_session()

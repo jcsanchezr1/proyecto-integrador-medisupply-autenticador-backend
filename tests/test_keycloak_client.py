@@ -688,6 +688,175 @@ class TestKeycloakClient(unittest.TestCase):
         self.assertEqual(role, 'Cliente')
         self.assertEqual(mock_get.call_count, 2)
         mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_users_by_role_success(self, mock_get, mock_get_token):
+        """Prueba obtener usuarios por rol exitosamente"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para primera página de usuarios (menos de 100, indica fin)
+        mock_response = Mock()
+        mock_response.json.return_value = [
+            {'id': 'user-1', 'email': 'user1@test.com'},
+            {'id': 'user-2', 'email': 'user2@test.com'}
+        ]
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+        
+        # Ejecutar
+        emails = self.client.get_users_by_role('Administrador')
+        
+        # Verificar
+        self.assertEqual(emails, ['user1@test.com', 'user2@test.com'])
+        self.assertEqual(mock_get.call_count, 1)  # Solo una llamada porque hay menos de 100 usuarios
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_users_by_role_pagination(self, mock_get, mock_get_token):
+        """Prueba obtener usuarios por rol con paginación"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para primera página (100 usuarios - exactamente el máximo)
+        mock_response_1 = Mock()
+        mock_response_1.json.return_value = [
+            {'id': f'user-{i}', 'email': f'user{i}@test.com'} for i in range(100)
+        ]
+        mock_response_1.raise_for_status.return_value = None
+        
+        # Mock para segunda página (50 usuarios - menos que el máximo, indica fin)
+        mock_response_2 = Mock()
+        mock_response_2.json.return_value = [
+            {'id': f'user-{i}', 'email': f'user{i}@test.com'} for i in range(100, 150)
+        ]
+        mock_response_2.raise_for_status.return_value = None
+        
+        # Configurar side_effect para diferentes llamadas
+        mock_get.side_effect = [mock_response_1, mock_response_2]
+        
+        # Ejecutar
+        emails = self.client.get_users_by_role('Cliente')
+        
+        # Verificar
+        self.assertEqual(len(emails), 150)
+        # Solo 2 llamadas porque la segunda página tiene menos de 100 usuarios (se detiene)
+        self.assertEqual(mock_get.call_count, 2)
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_users_by_role_empty_result(self, mock_get, mock_get_token):
+        """Prueba obtener usuarios por rol cuando no hay usuarios"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para respuesta vacía
+        mock_response = Mock()
+        mock_response.json.return_value = []
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+        
+        # Ejecutar
+        emails = self.client.get_users_by_role('Compras')
+        
+        # Verificar
+        self.assertEqual(emails, [])
+        mock_get.assert_called_once()
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_users_by_role_users_without_email(self, mock_get, mock_get_token):
+        """Prueba obtener usuarios por rol cuando algunos usuarios no tienen email"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para usuarios, algunos sin email
+        mock_response = Mock()
+        mock_response.json.return_value = [
+            {'id': 'user-1', 'email': 'user1@test.com'},
+            {'id': 'user-2'},  # Sin email
+            {'id': 'user-3', 'email': 'user3@test.com'},
+            {'id': 'user-4', 'email': None}  # Email None
+        ]
+        mock_response.raise_for_status.return_value = None
+        
+        # Mock para segunda página (vacía)
+        mock_response_2 = Mock()
+        mock_response_2.json.return_value = []
+        mock_response_2.raise_for_status.return_value = None
+        
+        mock_get.side_effect = [mock_response, mock_response_2]
+        
+        # Ejecutar
+        emails = self.client.get_users_by_role('Ventas')
+        
+        # Verificar - solo debe incluir usuarios con email válido
+        self.assertEqual(emails, ['user1@test.com', 'user3@test.com'])
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_users_by_role_request_exception(self, mock_get, mock_get_token):
+        """Prueba obtener usuarios por rol con excepción en petición"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        mock_get.side_effect = Exception("Connection error")
+        
+        # Ejecutar
+        emails = self.client.get_users_by_role('Logistica')
+        
+        # Verificar - debe retornar lista vacía en caso de error
+        self.assertEqual(emails, [])
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_users_by_role_http_error(self, mock_get, mock_get_token):
+        """Prueba obtener usuarios por rol con error HTTP"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para error HTTP
+        mock_response = Mock()
+        mock_response.raise_for_status.side_effect = Exception("HTTP 404")
+        mock_get.return_value = mock_response
+        
+        # Ejecutar
+        emails = self.client.get_users_by_role('Administrador')
+        
+        # Verificar - debe retornar lista vacía en caso de error
+        self.assertEqual(emails, [])
+        mock_get_token.assert_called_once()
+    
+    @patch.object(KeycloakClient, '_get_admin_token')
+    @patch('app.external.keycloak_client.requests.get')
+    def test_get_users_by_role_normalizes_role_name(self, mock_get, mock_get_token):
+        """Prueba que normaliza el nombre del rol correctamente"""
+        # Configurar mocks
+        mock_get_token.return_value = 'test-token'
+        
+        # Mock para respuesta vacía
+        mock_response = Mock()
+        mock_response.json.return_value = []
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+        
+        # Ejecutar con diferentes roles
+        roles = ['Administrador', 'Compras', 'Ventas', 'Logistica', 'Cliente']
+        for role in roles:
+            self.client.get_users_by_role(role)
+        
+        # Verificar que se llamó con los nombres correctos
+        self.assertEqual(mock_get.call_count, 5)
+        # Verificar que se usó el nombre exacto del rol en las URLs
+        for i, call in enumerate(mock_get.call_args_list):
+            # call[0] es una tupla con los argumentos posicionales, el primer elemento es la URL
+            url = call[0][0] if call[0] else ''
+            self.assertIn(f'/roles/{roles[i]}/users', url)
 
 
 if __name__ == '__main__':
