@@ -286,3 +286,35 @@ class AdminUserController(BaseController):
             return self.error_response(str(e), 400)
         except Exception as e:
             return self.handle_exception(e)
+
+
+class UserRejectController(BaseController):
+    """Controlador para rechazar usuarios"""
+    
+    def __init__(self, user_service=None):
+        self.user_service = user_service or UserService()
+    
+    def post(self, user_id: str) -> Tuple[Dict[str, Any], int]:
+        """POST /auth/user/reject/<user_id> - Rechazar un usuario"""
+        try:
+            # Validar que user_id no esté vacío
+            if not user_id or not user_id.strip():
+                return self.error_response("El parámetro 'user_id' es obligatorio", 400)
+            
+            # Rechazar usuario
+            updated_user = self.user_service.reject_user(user_id.strip())
+            
+            if not updated_user:
+                return self.error_response("No se pudo rechazar el usuario", 500)
+            
+            return self.success_response(
+                data=updated_user.to_dict(),
+                message="Usuario rechazado exitosamente"
+            )
+            
+        except ValidationError as e:
+            return self.error_response(str(e), 404)
+        except BusinessLogicError as e:
+            return self.error_response(str(e), 500)
+        except Exception as e:
+            return self.handle_exception(e)

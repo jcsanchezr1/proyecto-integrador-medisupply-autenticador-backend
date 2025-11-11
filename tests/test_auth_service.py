@@ -33,6 +33,7 @@ class TestAuthService(unittest.TestCase):
         mock_user.email = "test@example.com"
         mock_user.name = "Test User"
         mock_user.id = "Id Usuario"
+        mock_user.enabled = True
         self.mock_user_repository.get_by_email.return_value = mock_user
         
         # Mock de respuesta exitosa de Keycloak
@@ -81,6 +82,25 @@ class TestAuthService(unittest.TestCase):
         self.mock_user_repository.get_by_email.assert_called_once_with(user_email)
         self.mock_keycloak_client.authenticate_user.assert_not_called()
     
+    def test_authenticate_user_not_enabled(self):
+        """Test cuando el usuario no está habilitado (enabled = False)"""
+        user_email = "disabled@example.com"
+        password = "password123"
+        
+        # Mock del usuario en la base de datos con enabled = False
+        mock_user = Mock(spec=User)
+        mock_user.email = user_email
+        mock_user.enabled = False
+        self.mock_user_repository.get_by_email.return_value = mock_user
+        
+        # Ejecutar el método y verificar excepción
+        with self.assertRaises(BusinessLogicError) as context:
+            self.auth_service.authenticate_user(user_email, password)
+        
+        self.assertEqual(str(context.exception), "La cuenta no está habilitada. Contacte al administrador")
+        self.mock_user_repository.get_by_email.assert_called_once_with(user_email)
+        self.mock_keycloak_client.authenticate_user.assert_not_called()
+    
     def test_authenticate_user_keycloak_error(self):
         """Test cuando Keycloak retorna error"""
         user_email = "test@example.com"
@@ -88,6 +108,7 @@ class TestAuthService(unittest.TestCase):
         
         # Mock del usuario en la base de datos
         mock_user = Mock(spec=User)
+        mock_user.enabled = True
         self.mock_user_repository.get_by_email.return_value = mock_user
         
         # Mock de error de Keycloak
@@ -114,6 +135,7 @@ class TestAuthService(unittest.TestCase):
         mock_user.email = "test@example.com"
         mock_user.name = "Test User"
         mock_user.id = "Id User"
+        mock_user.enabled = True
         self.mock_user_repository.get_by_email.return_value = mock_user
         
         # Mock de respuesta exitosa de Keycloak

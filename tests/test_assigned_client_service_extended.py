@@ -152,7 +152,7 @@ class TestAssignedClientServiceExtended(unittest.TestCase):
         self.assertIn("No existe un cliente", str(context.exception))
     
     def test_create_updates_client_enabled(self):
-        """Test: Crear asignación actualiza enabled del cliente"""
+        """Test: Crear asignación actualiza enabled y status del cliente"""
         seller_id = '123e4567-e89b-12d3-a456-426614174000'
         client_id = '456e7890-e89b-12d3-a456-426614174111'
         
@@ -169,8 +169,8 @@ class TestAssignedClientServiceExtended(unittest.TestCase):
         # Ejecutar
         self.service.create(seller_id=seller_id, client_id=client_id)
         
-        # Verificar que se actualizó el campo enabled
-        self.mock_user_repo.update.assert_called_once_with(client_id, enabled=True)
+        # Verificar que se actualizó el campo enabled y status
+        self.mock_user_repo.update.assert_called_once_with(client_id, enabled=True, status='APROBADO')
     
     def test_get_assigned_clients_with_details_with_error(self):
         """Test: Error al obtener clientes con detalles"""
