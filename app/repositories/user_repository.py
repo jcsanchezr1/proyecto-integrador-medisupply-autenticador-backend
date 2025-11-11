@@ -35,6 +35,7 @@ class UserDB(Base):
     applicant_email = Column(String(100), nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
+    status = Column(String(50), nullable=True)
     enabled = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -76,6 +77,7 @@ class UserRepository(BaseRepository):
             applicant_email=db_user.applicant_email,
             latitude=db_user.latitude,
             longitude=db_user.longitude,
+            status=db_user.status,
             enabled=db_user.enabled,
             created_at=db_user.created_at,
             updated_at=db_user.updated_at
@@ -98,6 +100,7 @@ class UserRepository(BaseRepository):
             applicant_email=user.applicant_email,
             latitude=user.latitude,
             longitude=user.longitude,
+            status=user.status,
             enabled=user.enabled,
             created_at=user.created_at,
             updated_at=user.updated_at
