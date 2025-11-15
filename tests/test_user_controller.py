@@ -38,7 +38,7 @@ class TestUserController(unittest.TestCase):
         """Prueba obtener usuario por ID exitosamente"""
         # Configurar mock
         mock_user = Mock()
-        mock_user.to_dict.return_value = {"id": "123", "name": "Test"}
+        mock_user.to_dict.return_value = {"id": "123", "name": "Test", "created_at": "2024-01-01T00:00:00+00:00"}
         self.mock_user_service.get_by_id.return_value = mock_user
         
         # Ejecutar
@@ -47,7 +47,9 @@ class TestUserController(unittest.TestCase):
         # Verificar
         self.assertEqual(status_code, 200)
         self.assertEqual(response["message"], "Usuario obtenido exitosamente")
-        self.assertEqual(response["data"], {"id": "123", "name": "Test"})
+        self.assertEqual(response["data"]["id"], "123")
+        self.assertEqual(response["data"]["name"], "Test")
+        self.assertIn("created_at", response["data"])
         self.mock_user_service.get_by_id.assert_called_once_with("123")
     
     def test_get_user_by_id_not_found(self):
@@ -260,8 +262,8 @@ class TestUserControllerExtended(unittest.TestCase):
         with self.app.test_request_context('/auth/user?page=1&per_page=10'):
             # Configurar mocks
             mock_users = [
-                {'id': '1', 'name': 'Hospital 1', 'email': 'h1@test.com'},
-                {'id': '2', 'name': 'Hospital 2', 'email': 'h2@test.com'}
+                {'id': '1', 'name': 'Hospital 1', 'email': 'h1@test.com', 'created_at': '2024-01-01T00:00:00+00:00'},
+                {'id': '2', 'name': 'Hospital 2', 'email': 'h2@test.com', 'created_at': '2024-01-02T00:00:00+00:00'}
             ]
             self.mock_user_service.get_users_summary.return_value = mock_users
             self.mock_user_service.get_users_count.return_value = 2
@@ -273,6 +275,8 @@ class TestUserControllerExtended(unittest.TestCase):
             self.assertIn('users', response['data'])
             self.assertIn('pagination', response['data'])
             self.assertEqual(len(response['data']['users']), 2)
+            self.assertIn('created_at', response['data']['users'][0])
+            self.assertIn('created_at', response['data']['users'][1])
     
     def test_get_users_list_invalid_page(self):
         """Prueba GET con página inválida"""
@@ -811,7 +815,7 @@ class TestUserControllerAdditional(unittest.TestCase):
         with self.app.test_request_context('/auth/user?page=1&per_page=10&email=test'):
             # Configurar mocks
             mock_users = [
-                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com'}
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'created_at': '2024-01-01T00:00:00+00:00'}
             ]
             self.mock_user_service.get_users_summary.return_value = mock_users
             self.mock_user_service.get_users_count.return_value = 1
@@ -820,6 +824,7 @@ class TestUserControllerAdditional(unittest.TestCase):
             
             self.assertEqual(status_code, 200)
             self.assertEqual(len(response['data']['users']), 1)
+            self.assertIn('created_at', response['data']['users'][0])
             self.mock_user_service.get_users_summary.assert_called_once_with(
                 limit=10, offset=0, email='test', name=None, role=None
             )
@@ -832,7 +837,7 @@ class TestUserControllerAdditional(unittest.TestCase):
         with self.app.test_request_context('/auth/user?page=1&per_page=10&name=Hospital'):
             # Configurar mocks
             mock_users = [
-                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com'}
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'created_at': '2024-01-01T00:00:00+00:00'}
             ]
             self.mock_user_service.get_users_summary.return_value = mock_users
             self.mock_user_service.get_users_count.return_value = 1
@@ -841,6 +846,7 @@ class TestUserControllerAdditional(unittest.TestCase):
             
             self.assertEqual(status_code, 200)
             self.assertEqual(len(response['data']['users']), 1)
+            self.assertIn('created_at', response['data']['users'][0])
             self.mock_user_service.get_users_summary.assert_called_once_with(
                 limit=10, offset=0, email=None, name='Hospital', role=None
             )
@@ -853,7 +859,7 @@ class TestUserControllerAdditional(unittest.TestCase):
         with self.app.test_request_context('/auth/user?page=1&per_page=10&role=Cliente'):
             # Configurar mocks
             mock_users = [
-                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'role': 'Cliente'}
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'role': 'Cliente', 'created_at': '2024-01-01T00:00:00+00:00'}
             ]
             self.mock_user_service.get_users_summary.return_value = mock_users
             self.mock_user_service.get_users_count.return_value = 1
@@ -862,6 +868,7 @@ class TestUserControllerAdditional(unittest.TestCase):
             
             self.assertEqual(status_code, 200)
             self.assertEqual(len(response['data']['users']), 1)
+            self.assertIn('created_at', response['data']['users'][0])
             self.mock_user_service.get_users_summary.assert_called_once_with(
                 limit=10, offset=0, email=None, name=None, role='Cliente'
             )
@@ -874,7 +881,7 @@ class TestUserControllerAdditional(unittest.TestCase):
         with self.app.test_request_context('/auth/user?page=1&per_page=10&email=test&name=Hospital&role=Cliente'):
             # Configurar mocks
             mock_users = [
-                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'role': 'Cliente'}
+                {'id': '1', 'name': 'Hospital Test', 'email': 'test@hospital.com', 'role': 'Cliente', 'created_at': '2024-01-01T00:00:00+00:00'}
             ]
             self.mock_user_service.get_users_summary.return_value = mock_users
             self.mock_user_service.get_users_count.return_value = 1
@@ -883,6 +890,7 @@ class TestUserControllerAdditional(unittest.TestCase):
             
             self.assertEqual(status_code, 200)
             self.assertEqual(len(response['data']['users']), 1)
+            self.assertIn('created_at', response['data']['users'][0])
             self.mock_user_service.get_users_summary.assert_called_once_with(
                 limit=10, offset=0, email='test', name='Hospital', role='Cliente'
             )
