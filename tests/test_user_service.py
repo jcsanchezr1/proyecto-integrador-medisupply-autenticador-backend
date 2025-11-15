@@ -4,6 +4,7 @@ Pruebas unitarias para UserService usando unittest
 import unittest
 import sys
 import os
+from datetime import datetime, timezone
 from unittest.mock import Mock, patch, MagicMock
 
 # Agregar el directorio padre al path para importar la app
@@ -351,10 +352,11 @@ class TestUserService(unittest.TestCase):
         """Prueba obtener resumen de usuarios exitosamente"""
         # Configurar mock
         mock_users = [
-            User(id='1', name='Hospital 1', email='h1@test.com', status='APROBADO'),
-            User(id='2', name='Hospital 2', email='h2@test.com', status='RECHAZADO')
+            User(id='1', name='Hospital 1', email='h1@test.com', status='APROBADO', created_at=datetime.now(timezone.utc)),
+            User(id='2', name='Hospital 2', email='h2@test.com', status='RECHAZADO', created_at=datetime.now(timezone.utc))
         ]
         self.mock_user_repository.get_all.return_value = mock_users
+        self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
         
         # Ejecutar
         result = self.service.get_users_summary(limit=10, offset=0)
@@ -365,7 +367,11 @@ class TestUserService(unittest.TestCase):
         self.assertEqual(result[0]['name'], 'Hospital 1')
         self.assertEqual(result[0]['email'], 'h1@test.com')
         self.assertEqual(result[0]['status'], 'APROBADO')
+        self.assertIn('created_at', result[0])
+        self.assertIsNotNone(result[0]['created_at'])
         self.assertEqual(result[1]['status'], 'RECHAZADO')
+        self.assertIn('created_at', result[1])
+        self.assertIsNotNone(result[1]['created_at'])
     
     def test_get_users_summary_business_logic_error(self):
         """Prueba obtener resumen de usuarios con error"""
@@ -773,8 +779,8 @@ class TestUserService(unittest.TestCase):
         """Prueba obtener resumen de usuarios con filtro de email"""
         # Configurar mocks
         mock_users = [
-            User(id='1', name='Hospital Test', email='test@hospital.com'),
-            User(id='2', name='Clínica Test', email='test@clinica.com')
+            User(id='1', name='Hospital Test', email='test@hospital.com', created_at=datetime.now(timezone.utc)),
+            User(id='2', name='Clínica Test', email='test@clinica.com', created_at=datetime.now(timezone.utc))
         ]
         self.mock_user_repository.get_all.return_value = mock_users
         self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
@@ -785,13 +791,15 @@ class TestUserService(unittest.TestCase):
         # Verificar
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]['email'], 'test@hospital.com')
+        self.assertIn('created_at', result[0])
         self.assertEqual(result[1]['email'], 'test@clinica.com')
+        self.assertIn('created_at', result[1])
     
     def test_get_users_summary_with_name_filter(self):
         """Prueba obtener resumen de usuarios con filtro de nombre"""
         # Configurar mocks
         mock_users = [
-            User(id='1', name='Hospital Test', email='h1@test.com')
+            User(id='1', name='Hospital Test', email='h1@test.com', created_at=datetime.now(timezone.utc))
         ]
         self.mock_user_repository.get_all.return_value = mock_users
         self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
@@ -802,6 +810,7 @@ class TestUserService(unittest.TestCase):
         # Verificar
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], 'Hospital Test')
+        self.assertIn('created_at', result[0])
     
     def test_get_users_summary_with_role_filter(self):
         """Prueba obtener resumen de usuarios con filtro de rol"""
@@ -812,7 +821,7 @@ class TestUserService(unittest.TestCase):
         
         # Simular usuarios obtenidos de la BD
         mock_users = [
-            User(id='1', name='Hospital 1', email='h1@test.com')
+            User(id='1', name='Hospital 1', email='h1@test.com', created_at=datetime.now(timezone.utc))
         ]
         self.mock_user_repository.get_by_emails.return_value = mock_users
         
@@ -826,6 +835,7 @@ class TestUserService(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['email'], 'h1@test.com')
         self.assertEqual(result[0]['role'], 'Administrador')
+        self.assertIn('created_at', result[0])
         self.mock_keycloak_client.get_users_by_role.assert_called_once_with('Administrador')
         self.mock_user_repository.get_by_emails.assert_called_once_with(
             emails=['h1@test.com'],
@@ -844,7 +854,7 @@ class TestUserService(unittest.TestCase):
         
         # Simular usuarios obtenidos de la BD
         mock_users = [
-            User(id='1', name='Hospital Test', email='test@hospital.com')
+            User(id='1', name='Hospital Test', email='test@hospital.com', created_at=datetime.now(timezone.utc))
         ]
         self.mock_user_repository.get_by_emails.return_value = mock_users
         self.mock_keycloak_client.get_user_role.return_value = 'Cliente'
@@ -858,6 +868,7 @@ class TestUserService(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], 'Hospital Test')
         self.assertEqual(result[0]['role'], 'Cliente')
+        self.assertIn('created_at', result[0])
         self.mock_keycloak_client.get_users_by_role.assert_called_once_with('Cliente')
         self.mock_user_repository.get_by_emails.assert_called_once_with(
             emails=['test@hospital.com'],
