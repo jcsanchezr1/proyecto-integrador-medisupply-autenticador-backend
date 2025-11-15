@@ -248,7 +248,8 @@ class UserService(BaseService):
                         'institution_type': user.institution_type,
                         'phone': user.phone,
                         'status': user.status,
-                        'role': user_role
+                        'role': user_role,
+                        'created_at': user.created_at.isoformat() if user.created_at else None
                     })
                 
                 return users_summary
@@ -268,7 +269,8 @@ class UserService(BaseService):
                         'institution_type': user.institution_type,
                         'phone': user.phone,
                         'status': user.status,
-                        'role': user_role
+                        'role': user_role,
+                        'created_at': user.created_at.isoformat() if user.created_at else None
                     })
                 
                 return users_summary
